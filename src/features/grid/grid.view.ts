@@ -1,0 +1,65 @@
+import { ItemView, WorkspaceLeaf } from "obsidian";
+import { mount, unmount } from "svelte";
+import type { Component } from "svelte";
+import GridView from "./grid.page.svelte";
+import type Kairos from "../../main";
+import { findViewHeader } from "../../shared/actions/view-header.action";
+import type { KairosSettings } from "../settings/settings.tab";
+
+export const KAIROS_GRID_VIEW_TYPE = "kairos-grid-view";
+
+// The Grid view: a main-leaf table for triaging tasks against their
+// projects/domains (spec §5). Rows are associations (projects, domains, and an
+// unassigned catch-all), columns are days, and each cell holds the tasks tied
+// to that row on that day. Domains can be expanded into their child projects.
+export class KairosGridView extends ItemView {
+	plugin: Kairos;
+	private component?: ReturnType<typeof mount>;
+
+	constructor(leaf: WorkspaceLeaf, plugin: Kairos) {
+		super(leaf);
+		this.plugin = plugin;
+	}
+
+	getViewType(): string {
+		return KAIROS_GRID_VIEW_TYPE;
+	}
+
+	getDisplayText(): string {
+		return "Grid";
+	}
+
+	getIcon(): string {
+		return "layout-grid";
+	}
+
+	async onOpen() {
+		const container = this.contentEl;
+		container.empty();
+
+		this.component = mount(GridView as Component, {
+			target: container,
+			props: {
+				app: this.app,
+				index: this.plugin.indexAdapter.index,
+				viewHeader: findViewHeader(this.containerEl),
+				settings$: this.plugin.settings$,
+				updateSettings: (mutate: (s: KairosSettings) => void) =>
+					void this.plugin.updateSettings(mutate),
+				reveal: (date: string, blockLine: number) =>
+					void this.plugin.revealInDayView(date, blockLine),
+				routineActions: this.plugin.routinesFeed.actions(),
+				leftoverActions: this.plugin.routinesFeed.leftoverActions(),
+				links: this.plugin.links,
+				showDay: (date: string) => void this.plugin.showInDayView(date),
+			},
+		});
+	}
+
+	async onClose() {
+		if (this.component) {
+			void unmount(this.component);
+			this.component = undefined;
+		}
+	}
+}

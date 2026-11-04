@@ -1,0 +1,539 @@
+import { describe, expect, it } from "vitest";
+import type { Domain, Project, StatusRecord } from "../../core/models/core.types";
+import type { ProjectsDomains } from "../../core/vault-index/kairos-index.service";
+import { appendActivePeriod, appendStatus, effectiveStatus } from "../projects/project.file";
+import { historyToSpans } from "./gantt-spans.util";
+import { activeInWindow, visibleEntities } from "./gantt-rows.util";
+import {
+	dateToX,
+	daysBetween,
+	dragBounds,
+	dragPeriod,
+	getHeader,
+	getUnitViewport,
+	getViewportWidth,
+	isoWeekNumber,
+	LABEL_PAD_Y,
+	ROW_GAP,
+	ROW_HEIGHT,
+	rowHeightFor,
+	rowTops,
+	shiftDays,
+	shiftMonths,
+	startOfQuarter,
+	startOfWeek,
+	stepUnit,
+	stepView,
+	unitLabel,
+	unitRange,
+	viewLabel,
+	viewRange,
+	xToDate,
+	xToDay,
+} from "./gantt-coordinates.util";
+
+const h = (
+	...rs: [string, "active" | "inactive" | "archived", string?][]
+): StatusRecord[] =>
+	rs.map(([date, status, note]) => ({
+		date: date,
+		status,
+		...(note ? { note } : {}),
+	}));
+
+describe("historyToSpans", () => {
+	it("returns [] for an empty history (nothing recorded to draw)", () => {
+		expect(historyToSpans([], "2026-08-05")).toEqual([]);
+	});
+
+	it("each record opens a span running to the next record's date", () => {
+		const spans = historyToSpans(
+			h(["2026-01-01", "active"], ["2026-03-01", "inactive"]),
+			"2026-08-05",
+		);
+		expect(spans[0]).toMatchObject({ start: "2026-01-01", end: "2026-03-01", status: "active", open: false });
+		expect(spans[1]).toMatchObject({ start: "2026-03-01", end: "2026-08-05", status: "inactive", open: true });
+	});
+
+	it("the trailing span is open and ends at today", () => {
+		const spans = historyToSpans(h(["2026-01-01", "active"]), "2026-08-05");
+		expect(spans).toHaveLength(1);
+		expect(spans[0]).toMatchObject({ start: "2026-01-01", end: "2026-08-05", open: true });
+	});
+
+	it("clamps end to start when the trailing record is future-dated", () => {
+		const spans = historyToSpans(h(["2026-12-01", "active"]), "2026-08-05");
+		expect(spans[0]).toMatchObject({ start: "2026-12-01", end: "2026-12-01" });
+	});
+
+	it("carries the note on any status", () => {
+		const spans = historyToSpans(
+			h(["2026-01-01", "active", "laundry"], ["2026-02-01", "inactive", "on hold"]),
+			"2026-08-05",
+		);
+		expect(spans[0]?.note).toBe("laundry");
+		expect(spans[1]?.note).toBe("on hold");
+	});
+
+	it("never reads intensity out of the note (#29)", () => {
+		// The note is the intention for the stretch, not a keyword: the old
+		// taper / baseline / hard words leave a span exactly like any other note.
+		const multi = historyToSpans(h(["2026-01-01", "active", "baseline 3x/week"]), "2026-08-05");
+		const one = historyToSpans(h(["2026-01-01", "active", "hard"]), "2026-08-05");
+		expect(multi[0]?.intensity).toBeUndefined();
+		expect(one[0]?.intensity).toBeUndefined();
+		expect({ ...multi[0], note: undefined }).toEqual({ ...one[0], note: undefined });
+	});
+
+	it("carries an active record's intensity, including 0", () => {
+		const spans = historyToSpans(
+			[
+				{ date: "2026-01-01", status: "active", intensity: 5 },
+				{ date: "2026-02-01", status: "active", intensity: 0 },
+				{ date: "2026-03-01", status: "active" },
+			],
+			"2026-08-05",
+		);
+		expect(spans.map((s) => s.intensity)).toEqual([5, 0, undefined]);
+	});
+
+	it("drops intensity from inactive and archived spans", () => {
+		const spans = historyToSpans(
+			[
+				{ date: "2026-01-01", status: "inactive", intensity: 3 },
+				{ date: "2026-02-01", status: "archived", intensity: 3 },
+			],
+			"2026-08-05",
+		);
+		expect(spans.map((s) => s.intensity)).toEqual([undefined, undefined]);
+	});
+
+	it("carries `why` onto the span it opens", () => {
+		const spans = historyToSpans(
+			[
+				{ date: "2026-01-01", status: "active" },
+				{ date: "2026-02-01", status: "inactive", why: "handed it off" },
+			],
+			"2026-08-05",
+		);
+		expect(spans[0]?.why).toBeUndefined();
+		expect(spans[1]?.why).toBe("handed it off");
+	});
+
+	it("sorts an out-of-order input defensively", () => {
+		const spans = historyToSpans(
+			h(["2026-03-01", "inactive"], ["2026-01-01", "active"]),
+			"2026-08-05",
+		);
+		expect(spans.map((s) => s.start)).toEqual(["2026-01-01", "2026-03-01"]);
+	});
+});
+
+describe("authoring active periods via the Gantt (compound edits)", () => {
+	const project = (history: StatusRecord[]): Project => ({
+		id: "p",
+		name: "P",
+		aliases: [],
+		description: "",
+		history,
+		archived: false,
+		source: { path: "P.md", line: 0 },
+	});
+
+	// The drag-to-create gesture writes `active` at A then `inactive` at B in one
+	// entity (see setProjectActivePeriod). Compose the same pure edits here.
+	const activePeriod = (p: Project, start: string, end: string, note?: string) =>
+		appendStatus(
+			appendStatus(p, start, "active", note),
+			end,
+			"inactive",
+		);
+
+	it("a bounded active period renders as one active span ending at its close", () => {
+		const p = activePeriod(project([]), "2026-01-01", "2026-03-01", "hard");
+		expect(p.history).toEqual([
+			{ date: "2026-01-01", status: "active", note: "hard" },
+			{ date: "2026-03-01", status: "inactive" },
+		]);
+		const spans = historyToSpans(p.history, "2026-08-05");
+		const active = spans.filter((s) => s.status === "active");
+		expect(active).toHaveLength(1);
+		expect(active[0]).toMatchObject({ start: "2026-01-01", end: "2026-03-01", open: false });
+	});
+
+	it("a click-in-place (open-ended active) leaves the trailing span open", () => {
+		const p = appendStatus(project([]), "2026-02-01", "active");
+		const spans = historyToSpans(p.history, "2026-08-05");
+		expect(spans).toHaveLength(1);
+		expect(spans[0]).toMatchObject({ status: "active", open: true });
+	});
+
+	it("a new active period after an indefinite one is just a note-change boundary", () => {
+		// | abc >  →  | abc | def >
+		let p = appendStatus(project([]), "2026-01-01", "active", "abc");
+		p = appendStatus(p, "2026-04-01", "active", "def");
+		const active = historyToSpans(p.history, "2026-08-05").filter((s) => s.status === "active");
+		expect(active.map((s) => [s.start, s.note])).toEqual([
+			["2026-01-01", "abc"],
+			["2026-04-01", "def"],
+		]);
+		// The earlier period is now bounded; the later one is still open-ended.
+		expect(active[0]).toMatchObject({ end: "2026-04-01", open: false });
+		expect(active[1]).toMatchObject({ open: true });
+	});
+
+	it("ending an indefinite bar inserts an inactive close (no new active span)", () => {
+		let p = appendStatus(project([]), "2026-01-01", "active");
+		p = appendStatus(p, "2026-05-01", "inactive");
+		const spans = historyToSpans(p.history, "2026-08-05");
+		expect(spans.filter((s) => s.status === "active")).toHaveLength(1);
+		expect(spans.find((s) => s.status === "active")).toMatchObject({
+			end: "2026-05-01",
+			open: false,
+		});
+	});
+
+	it("a distinct note lets an active-after-active boundary survive normalization", () => {
+		// Clicking inside an existing (note-less) active span must NOT collapse: the
+		// view seeds a differing note (`boundaryNote`) so the split is a real record.
+		let p = appendStatus(project([]), "2026-01-01", "active");
+		const same = appendStatus(p, "2026-04-01", "active");
+		expect(same.history).toHaveLength(1); // identical transition collapsed away
+
+		const distinct = appendStatus(p, "2026-04-01", "active", "baseline");
+		expect(distinct.history).toHaveLength(2); // survives → the split boundary exists
+		const active = historyToSpans(distinct.history, "2026-08-05");
+		expect(active).toHaveLength(2);
+		expect(active[0]).toMatchObject({ start: "2026-01-01", end: "2026-04-01", open: false });
+		expect(active[1]).toMatchObject({ start: "2026-04-01", open: true });
+	});
+});
+
+describe("drag-creating a period (#72)", () => {
+	const project = (history: StatusRecord[]): Project => ({
+		id: "p",
+		name: "P",
+		aliases: [],
+		description: "",
+		history,
+		archived: false,
+		source: { path: "P.md", line: 0 },
+	});
+	// A week viewport starting Monday 2026-10-26, 40px per day column.
+	const start = "2026-10-26";
+	const px = 40;
+	// Somewhere inside a day's column, as a pointer would be.
+	const inColumn = (date: string, frac = 0.5) => dateToX(date, start, px) + frac * px;
+	const activeBar = (history: StatusRecord[]) =>
+		historyToSpans(history, "2026-12-31").find((s) => s.status === "active");
+
+	it("covers the column released on, not just up to it", () => {
+		// Press on Monday's column, release on Wednesday's.
+		const pressed = xToDay(inColumn("2026-10-26"), start, px);
+		const released = xToDay(inColumn("2026-10-28", 0.9), start, px);
+		const { start: a, end: b } = dragPeriod(pressed, released);
+		const bar = activeBar(appendActivePeriod(project([]), a, b).history);
+		// The bar runs Monday through Wednesday: it ends at Thursday's boundary.
+		expect(bar).toMatchObject({ start: "2026-10-26", end: "2026-10-29", open: false });
+	});
+
+	it("dragging leftwards covers the pressed column too", () => {
+		expect(dragPeriod("2026-10-28", "2026-10-26")).toEqual({
+			start: "2026-10-26",
+			end: "2026-10-29",
+		});
+	});
+
+	it("is bounded by the records either side of the pressed day", () => {
+		const history = h(["2026-10-20", "active"], ["2026-10-24", "inactive"], ["2026-11-02", "active"]);
+		expect(dragBounds(history, "2026-10-28")).toEqual({ lower: "2026-10-24", upper: "2026-11-02" });
+	});
+
+	it("a record on the pressed day bounds neither side", () => {
+		// It used to be the upper bound, so a rightward drag from it was clamped to
+		// the day before and the period started a day early.
+		const history = h(["2026-10-20", "active"], ["2026-10-28", "inactive"]);
+		expect(dragBounds(history, "2026-10-28")).toEqual({ lower: "2026-10-20", upper: null });
+	});
+
+	it("stopping the day before the next record leaves that record alone", () => {
+		// Next record: an active stretch starting Friday. Drag Mon–Thu.
+		const p = project(h(["2026-10-30", "active", "next"]));
+		const { start: a, end: b } = dragPeriod("2026-10-26", "2026-10-29");
+		expect(appendActivePeriod(p, a, b, "new").history).toEqual([
+			{ date: "2026-10-26", status: "active", note: "new" },
+			{ date: "2026-10-30", status: "active", note: "next" },
+		]);
+	});
+
+	it("an existing record inside the period ends it, untouched", () => {
+		// Dragging leftwards from a day that holds a record: the record stays.
+		const p = project(h(["2026-10-28", "inactive"]));
+		const { start: a, end: b } = dragPeriod("2026-10-28", "2026-10-26");
+		const next = appendActivePeriod(p, a, b);
+		expect(next.history).toEqual([
+			{ date: "2026-10-26", status: "active" },
+			{ date: "2026-10-28", status: "inactive" },
+		]);
+	});
+});
+
+describe("coordinate math", () => {
+	it("daysBetween / shiftDays round-trip", () => {
+		expect(daysBetween("2026-01-01", "2026-01-31")).toBe(30);
+		expect(shiftDays("2026-01-01", 30)).toBe("2026-01-31");
+		expect(daysBetween("2026-03-01", "2026-01-01")).toBe(-59); // 2026 not leap
+	});
+
+	it("dateToX / xToDate invert each other (snap to day)", () => {
+		const start = "2026-06-01";
+		const pxPerDay = 12;
+		for (const date of ["2026-06-01", "2026-06-15", "2026-07-01"]) {
+			const x = dateToX(date, start, pxPerDay);
+			expect(xToDate(x, start, pxPerDay)).toBe(date);
+		}
+	});
+
+	it("xToDate rounds a mid-day pixel to the nearest day boundary", () => {
+		expect(xToDate(17, "2026-06-01", 12)).toBe("2026-06-02"); // 17/12 ≈ 1.42 → +1 day
+		expect(xToDate(19, "2026-06-01", 12)).toBe("2026-06-03"); // 19/12 ≈ 1.58 → +2 days
+	});
+
+	it("xToDay floors to the day-column the cursor is inside (for clicks)", () => {
+		// Anywhere within a column maps to that column's day — no rounding-up to the
+		// next boundary the way xToDate does for a left-half click.
+		expect(xToDay(0, "2026-06-01", 12)).toBe("2026-06-01"); // left edge of day 0
+		expect(xToDay(5, "2026-06-01", 12)).toBe("2026-06-01"); // left half → still day 0
+		expect(xToDay(11, "2026-06-01", 12)).toBe("2026-06-01"); // right edge of day 0
+		expect(xToDay(12, "2026-06-01", 12)).toBe("2026-06-02"); // into day 1
+	});
+
+	it("getViewportWidth counts both endpoints", () => {
+		expect(getViewportWidth("2026-06-01", "2026-06-30", 10)).toBe(300); // 30 days * 10
+	});
+});
+
+describe("calendar-unit intervals", () => {
+	it("startOfWeek snaps to the Monday on-or-before (ISO weeks)", () => {
+		expect(startOfWeek("2026-08-21")).toBe("2026-08-17"); // Fri → Mon of that week
+		expect(startOfWeek("2026-08-17")).toBe("2026-08-17"); // a Monday is its own start
+		expect(startOfWeek("2026-08-23")).toBe("2026-08-17"); // Sunday still belongs to Mon week
+	});
+
+	it("startOfQuarter snaps to Jan/Apr/Jul/Oct firsts", () => {
+		expect(startOfQuarter("2026-08-21")).toBe("2026-07-01"); // Q3
+		expect(startOfQuarter("2026-01-15")).toBe("2026-01-01"); // Q1
+		expect(startOfQuarter("2026-12-31")).toBe("2026-10-01"); // Q4
+	});
+
+	it("unitRange returns whole inclusive calendar units", () => {
+		expect(unitRange("week", "2026-08-21")).toEqual({ start: "2026-08-17", end: "2026-08-23" });
+		expect(unitRange("month", "2026-08-21")).toEqual({ start: "2026-08-01", end: "2026-08-31" });
+		expect(unitRange("quarter", "2026-08-21")).toEqual({ start: "2026-07-01", end: "2026-09-30" });
+		expect(unitRange("year", "2026-08-21")).toEqual({ start: "2026-01-01", end: "2026-12-31" });
+	});
+
+	it("getUnitViewport mirrors unitRange", () => {
+		expect(getUnitViewport("month", "2026-02-14")).toEqual({ start: "2026-02-01", end: "2026-02-28" });
+	});
+
+	it("stepUnit advances/retreats by whole units", () => {
+		expect(stepUnit("week", "2026-08-17", 1)).toBe("2026-08-24");
+		expect(stepUnit("week", "2026-08-17", -1)).toBe("2026-08-10");
+		expect(stepUnit("month", "2026-12-01", 1)).toBe("2027-01-01"); // year wrap
+		expect(stepUnit("month", "2026-01-01", -1)).toBe("2025-12-01");
+		expect(stepUnit("quarter", "2026-10-01", 1)).toBe("2027-01-01"); // Q4 → next Q1
+		expect(stepUnit("quarter", "2026-01-01", -1)).toBe("2025-10-01");
+		expect(stepUnit("year", "2026-01-01", 1)).toBe("2027-01-01");
+	});
+
+	it("isoWeekNumber follows ISO-8601 (Thursday rule)", () => {
+		// 2026-01-01 is a Thursday → it belongs to week 1 of 2026.
+		expect(isoWeekNumber("2026-01-01")).toBe(1);
+		expect(isoWeekNumber("2026-01-05")).toBe(2); // the following Monday
+		// A date in a mid-year week.
+		expect(isoWeekNumber("2026-08-21")).toBe(34);
+		// 2025-12-29 (Mon) starts the week containing 2026-01-01 (Thu) → week 1/2026.
+		expect(isoWeekNumber("2025-12-29")).toBe(1);
+	});
+
+	it("unitLabel is human-readable per interval", () => {
+		expect(unitLabel("month", "2026-08-01")).toBe("Aug 2026");
+		expect(unitLabel("quarter", "2026-07-01")).toBe("Q3 2026");
+		expect(unitLabel("year", "2026-01-01")).toBe("2026");
+	});
+});
+
+describe("the Timeline's range and its arrows", () => {
+	it("shiftMonths keeps the day, or the month's last when it has no such day", () => {
+		expect(shiftMonths("2026-10-08", 1)).toBe("2026-11-08");
+		expect(shiftMonths("2026-01-31", 1)).toBe("2026-02-28");
+		expect(shiftMonths("2026-11-15", 3)).toBe("2027-02-15"); // year wrap
+		expect(shiftMonths("2026-02-01", -3)).toBe("2025-11-01");
+		expect(shiftMonths("2026-05-01", -12)).toBe("2025-05-01");
+	});
+
+	it("viewRange is one unit long from any start", () => {
+		expect(viewRange("month", "2026-10-01")).toEqual({ start: "2026-10-01", end: "2026-10-31" });
+		expect(viewRange("month", "2026-10-08")).toEqual({ start: "2026-10-08", end: "2026-11-07" });
+		expect(viewRange("week", "2026-10-28")).toEqual({ start: "2026-10-28", end: "2026-11-03" });
+		expect(viewRange("quarter", "2026-11-01")).toEqual({ start: "2026-11-01", end: "2027-01-31" });
+		expect(viewRange("year", "2026-04-01")).toEqual({ start: "2026-04-01", end: "2027-03-31" });
+	});
+
+	it("the big arrows move a whole unit, the small ones one unit down", () => {
+		expect(stepView("week", "2026-10-26", 1, true)).toBe("2026-11-02");
+		expect(stepView("week", "2026-10-26", 1, false)).toBe("2026-10-27"); // a day
+		expect(stepView("month", "2026-10-01", 1, true)).toBe("2026-11-01");
+		expect(stepView("month", "2026-10-01", 1, false)).toBe("2026-10-08"); // a week
+		expect(stepView("month", "2026-10-01", -1, false)).toBe("2026-09-24");
+		expect(stepView("quarter", "2026-10-01", 1, false)).toBe("2026-11-01"); // a month
+		expect(stepView("quarter", "2026-10-01", -1, true)).toBe("2026-07-01");
+		expect(stepView("year", "2026-01-01", 1, false)).toBe("2026-04-01"); // a quarter
+		expect(stepView("year", "2026-01-01", -1, true)).toBe("2025-01-01");
+	});
+
+	it("a small step back undoes a small step forward", () => {
+		for (const iv of ["week", "month", "quarter", "year"] as const) {
+			const there = stepView(iv, "2026-10-01", 1, false);
+			expect(stepView(iv, there, -1, false)).toBe("2026-10-01");
+		}
+	});
+
+	it("viewLabel names a whole unit, and the ends of a range that isn't one", () => {
+		expect(viewLabel("month", "2026-10-01")).toBe("Oct 2026");
+		expect(viewLabel("month", "2026-10-08")).toBe("8 Oct – 7 Nov 2026");
+		expect(viewLabel("month", "2026-12-15")).toBe("15 Dec 2026 – 14 Jan 2027");
+		expect(viewLabel("quarter", "2026-10-01")).toBe("Q4 2026");
+		expect(viewLabel("quarter", "2026-08-01")).toBe("Aug – Oct 2026");
+		expect(viewLabel("quarter", "2026-11-01")).toBe("Nov 2026 – Jan 2027");
+		expect(viewLabel("year", "2026-04-01")).toBe("Apr 2026 – Mar 2027");
+		expect(viewLabel("week", "2026-10-28")).toBe("28 Oct – 3 Nov 2026");
+	});
+
+	it("a week range off a Monday shows both weeks it straddles", () => {
+		const { start, end } = viewRange("week", "2026-10-28"); // a Wednesday
+		const coarse = getHeader("week", start, end, 10).coarse.map((c) => c.label);
+		expect(coarse).toEqual(["Week 44", "Week 45"]);
+		expect(getHeader("week", "2026-10-26", "2026-11-01", 10).coarse.map((c) => c.label)).toEqual(["Week 44"]);
+	});
+});
+
+describe("row visibility", () => {
+	// The Timeline's window is its own viewport (a whole calendar unit), so every
+	// case below is the *same* entity read against two different viewports.
+	const TODAY = "2026-08-20";
+	const AUG = { start: "2026-08-01", end: "2026-08-31" };
+	const JAN = { start: "2026-01-01", end: "2026-01-31" };
+
+	const project = (name: string, history: StatusRecord[]): Project => ({
+		id: `p-${name}`,
+		name,
+		aliases: [],
+		description: "",
+		history,
+		archived: effectiveStatus(history, TODAY) === "archived",
+		source: { path: `${name}.md`, line: 0 },
+	});
+	const domain = (name: string, history: StatusRecord[]): Domain => ({
+		id: `d-${name}`,
+		name,
+		aliases: [],
+		description: "",
+		order: 0,
+		color: "",
+		history,
+		archived: effectiveStatus(history, TODAY) === "archived",
+		source: { path: `${name}.md`, line: 0 },
+	});
+	const feed = (
+		domains: Domain[],
+		children: Project[][] = [],
+		orphans: Project[] = [],
+	): ProjectsDomains => ({
+		domains,
+		projectsByDomain: new Map(
+			domains.map((d, i) => [d.id, children[i] ?? []] as const),
+		),
+		orphans,
+	});
+	const shown = (f: ProjectsDomains, w: { start: string; end: string }) =>
+		visibleEntities(f, w.start, w.end, TODAY).orphans.map((p) => p.name);
+
+	it("activeInWindow reads an empty history as active (nothing recorded ≠ paused)", () => {
+		expect(activeInWindow([], "2026-08-01", "2026-08-31")).toBe(true);
+	});
+
+	it("activeInWindow counts a record opening on the window's last day", () => {
+		const hist = h(["2026-01-01", "inactive"], ["2026-08-31", "active"]);
+		expect(activeInWindow(hist, "2026-08-01", "2026-08-31")).toBe(true);
+		expect(activeInWindow(hist, "2026-08-01", "2026-08-30")).toBe(false);
+	});
+
+	it("omits an archived project once the viewport is past its activity", () => {
+		const p = project("Old", h(["2026-01-01", "active"], ["2026-02-01", "archived"]));
+		expect(shown(feed([], [], [p]), AUG)).toEqual([]);
+	});
+
+	it("keeps that same archived project for a viewport it was active in", () => {
+		const p = project("Old", h(["2026-01-01", "active"], ["2026-02-01", "archived"]));
+		expect(shown(feed([], [], [p]), JAN)).toEqual(["Old"]);
+	});
+
+	it("keeps an archived project whose active span merely spans the viewport", () => {
+		// No record falls inside January at all — the span it was active for runs
+		// straight through, and its bar is clamped to both viewport edges.
+		const p = project("Long", h(["2025-11-01", "active"], ["2026-02-15", "archived"]));
+		expect(shown(feed([], [], [p]), JAN)).toEqual(["Long"]);
+		expect(shown(feed([], [], [p]), AUG)).toEqual([]);
+	});
+
+	it("keeps a paused project so a new period can still be drawn on its row", () => {
+		// Inactive, not archived: the Timeline is the authoring surface, so the row
+		// stays reachable even in a viewport with nothing to draw.
+		const p = project("Paused", h(["2026-01-01", "active"], ["2026-03-01", "inactive"]));
+		expect(shown(feed([], [], [p]), AUG)).toEqual(["Paused"]);
+	});
+
+	it("doesn't hide a row for an archive record that hasn't taken effect yet", () => {
+		const p = project("Ending", h(["2026-01-01", "inactive"], ["2026-12-01", "archived"]));
+		expect(shown(feed([], [], [p]), AUG)).toEqual(["Ending"]);
+	});
+
+	it("keeps an archived domain's header when a child still earns a row", () => {
+		const d = domain("Health", h(["2026-02-01", "archived"]));
+		const child = project("Alpha", h(["2026-01-01", "active"]));
+		const out = visibleEntities(feed([d], [[child]]), AUG.start, AUG.end, TODAY);
+		expect(out.domains.map((r) => [r.domain.name, r.projects.map((p) => p.name)]))
+			.toEqual([["Health", ["Alpha"]]]);
+	});
+
+	it("keeps an archived domain for its own active days, without archived children", () => {
+		const d = domain("Health", h(["2025-06-01", "active"], ["2026-02-01", "archived"]));
+		const child = project("Alpha", h(["2025-06-01", "active"], ["2025-09-01", "archived"]));
+		const out = visibleEntities(feed([d], [[child]]), JAN.start, JAN.end, TODAY);
+		expect(out.domains.map((r) => [r.domain.name, r.projects.length])).toEqual([
+			["Health", 0],
+		]);
+	});
+
+	it("omits an archived domain whose children are archived too", () => {
+		const d = domain("Health", h(["2026-02-01", "archived"]));
+		const child = project("Alpha", h(["2026-02-01", "archived"]));
+		const out = visibleEntities(feed([d], [[child]]), AUG.start, AUG.end, TODAY);
+		expect(out.domains).toEqual([]);
+	});
+});
+
+describe("row heights", () => {
+	it("keeps ROW_HEIGHT until the label needs more", () => {
+		expect(rowHeightFor(undefined)).toBe(ROW_HEIGHT);
+		expect(rowHeightFor(ROW_HEIGHT - 2 * LABEL_PAD_Y)).toBe(ROW_HEIGHT);
+		expect(rowHeightFor(47.2)).toBe(48 + 2 * LABEL_PAD_Y);
+	});
+
+	it("stacks rows with a gap between them", () => {
+		expect(rowTops([38, 50, 38], 40)).toEqual([40, 40 + 38 + ROW_GAP, 40 + 38 + 50 + 2 * ROW_GAP]);
+		expect(rowTops([], 40)).toEqual([]);
+	});
+});

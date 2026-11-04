@@ -1,0 +1,328 @@
+// A Svelte action that wakes a row's hover action bar only when the mouse is
+// in a triangle at the row's right edge (geometry in action-zone-geometry.util.ts),
+// not on any hover. Every hover-revealed action bar in the plugin uses it, so
+// they all behave and look the same.
+//
+// Usage — put the action on the row and the shared class on its bar, which
+// must be a DIRECT child of the row (so a nested row's bar, e.g. a task inside
+// a timeline block, never wakes with its parent):
+//
+//   <div class="row" use:actionZone>
+//     <div class="kairos-action-bar">…buttons…</div>
+//     …
+//   </div>
+//
+// Options: `{ anchor: "right" }` for a bar centred vertically on the right
+// edge (default "top-right"); `fraction` to widen/narrow the zone;
+// `layout: "stack"` (EXPERIMENT, task rows only) to show the bar as a vertical
+// stack one button wide, rising from the row's top-right corner — see
+// action-stack.class.ts.
+//
+// What it does (styles live in the global styles.css):
+// - While the mouse is in the zone, the row carries `kairos-actions-awake`
+//   (ACTIONS_AWAKE_CLASS), which shows its direct-child `.kairos-action-bar`.
+//   Other selectors may key off that class to know the row's bar is up.
+// - Hysteresis: once awake, the bar stays shown while the pointer is over the
+//   bar itself, since the triangle narrows past the bar's left buttons.
+// - Hidden bars are `pointer-events: none`, so a click on the end of the row's
+//   text reaches the text, not an invisible button. They stay focusable, and
+//   `:focus-within` shows the bar for keyboard users.
+// - The dog-ear: pointing at a row that has a bar shows a small fold in the
+//   accent colour where the zone is (the top-right corner, or the right edge's
+//   middle for "right"), growing as the pointer nears it, so a new user can
+//   see where the actions are. It is the row's last child, `kairos-action-ear`
+//   (ACTION_EAR_CLASS), and hides while the bar is awake.
+// - Mouse only. Touch has no pointer position to track; there a first tap
+//   selects the row and shows its bar (touch-select.action.ts), and the dog-ear never
+//   shows. `menu: true` adds ⋯ to a selected row's bar, for its right-click
+//   menu.
+
+import { ActionStack } from "./action-stack.class";
+import { touchSelect } from "./touch-select.action";
+import { cornerNearness, inActionZone, type ActionZoneAnchor } from "./action-zone-geometry.util";
+
+/** Class on the row while its action bar is awake (mouse in the zone). */
+export const ACTIONS_AWAKE_CLASS = "kairos-actions-awake";
+/** Class marking the row's action bar (a direct child of the row). */
+export const ACTION_BAR_CLASS = "kairos-action-bar";
+/**
+ * Class on the bar itself while awake, in the stack layout only: a portaled
+ * stack is no longer the row's child, so `.kairos-actions-awake > …` can't
+ * reach it.
+ */
+export const ACTION_BAR_AWAKE_CLASS = "kairos-action-bar-awake";
+
+/** Class of the dog-ear hint the action adds to the row. */
+export const ACTION_EAR_CLASS = "kairos-action-ear";
+/** On the dog-ear while the pointer is on the row and the bar is asleep. */
+const EAR_SHOWN_CLASS = "is-shown";
+/** On the dog-ear of a "right"-anchored row: a notch on the right edge. */
+const EAR_RIGHT_CLASS = "kairos-action-ear-right";
+/** How close the pointer is to the corner (0–1), for the dog-ear's size. */
+const EAR_NEAR_VAR = "--kairos-action-ear-near";
+
+/** Marks a row that has this action, so an outer row can tell it's nested. */
+const ZONE_ATTR = "data-kairos-action-zone";
+
+/**
+ * Stack layout: how long the stack stays up after the pointer leaves both the
+ * row and the stack, so crossing a sub-pixel gap between them doesn't drop it.
+ */
+const STACK_GRACE_MS = 120;
+/** Stack layout: wait for the fade-out before un-portaling (styles.css 0.1s). */
+const STACK_FADE_MS = 150;
+
+export interface ActionZoneOptions {
+	/** Where the bar sits on the row (default "top-right"). */
+	anchor?: ActionZoneAnchor;
+	/** Share of the row's width the zone reaches along its widest line. */
+	fraction?: number;
+	/**
+	 * "bar" (default): the bar's own CSS lays it out. "stack" (EXPERIMENT): a
+	 * vertical stack, one button wide, whose first button by CSS `order` sits in
+	 * the row's top-right corner and the rest rise above it (or hang below when
+	 * there's no room above). Mouse wakes only; touch keeps the bar's CSS.
+	 */
+	layout?: "bar" | "stack";
+	/**
+	 * The row has a right-click menu. On touch, its selected bar gets a ⋯ that
+	 * opens it (touch-select.action.ts).
+	 */
+	menu?: boolean;
+}
+
+export function actionZone(host: HTMLElement, options: ActionZoneOptions = {}) {
+	let opts = options;
+	let awake = false;
+	let stack: ActionStack | null = null;
+	let sleepTimer: number | undefined;
+	let restoreTimer: number | undefined;
+	let viewportListening = false;
+	let destroyed = false;
+	// The row's own window (Obsidian pop-out windows have their own).
+	const win: Window = host.ownerDocument.defaultView ?? activeWindow;
+
+	const isStack = () => opts.layout === "stack";
+
+	const ear = host.ownerDocument.createElement("span");
+	ear.className = ACTION_EAR_CLASS;
+	ear.setAttribute("aria-hidden", "true");
+	host.appendChild(ear);
+	const syncEarShape = () => ear.classList.toggle(EAR_RIGHT_CLASS, opts.anchor === "right");
+	syncEarShape();
+
+	function showEar(event: PointerEvent) {
+		const near = cornerNearness(event.clientX, event.clientY, host.getBoundingClientRect(), opts.anchor);
+		ear.style.setProperty(EAR_NEAR_VAR, near.toFixed(3));
+		ear.classList.add(EAR_SHOWN_CLASS);
+	}
+	const hideEar = () => ear.classList.remove(EAR_SHOWN_CLASS);
+
+	function findBar(): HTMLElement | null {
+		// A portaled stack isn't the row's child any more.
+		if (stack?.portaled) return stack.bar;
+		// Looked up per event: the bar may render conditionally.
+		return host.querySelector<HTMLElement>(`:scope > .${ACTION_BAR_CLASS}`);
+	}
+
+	function stackFor(bar: HTMLElement): ActionStack {
+		if (stack?.bar !== bar) {
+			stack?.destroy();
+			stack = new ActionStack(host, bar, onBarEnter, onBarLeave);
+		}
+		return stack;
+	}
+
+	function clearTimers() {
+		win.clearTimeout(sleepTimer);
+		win.clearTimeout(restoreTimer);
+		sleepTimer = restoreTimer = undefined;
+	}
+
+	function setAwake(next: boolean) {
+		if (next === awake) return;
+		awake = next;
+		const bar = isStack() ? findBar() : null;
+		// Stack: switch to the (hidden) stack layout first, so the staggered
+		// reveal plays from the hidden state when the awake class lands.
+		if (next && bar) stackFor(bar).prepare();
+		host.classList.toggle(ACTIONS_AWAKE_CLASS, next);
+		if (!isStack()) return;
+		if (next) {
+			clearTimers();
+			if (bar) stackFor(bar).place(true, opts.anchor);
+		} else if (stack?.portaled) {
+			const s = stack;
+			restoreTimer = win.setTimeout(() => {
+				if (!awake) s.restore();
+			}, STACK_FADE_MS);
+		}
+		bar?.classList.toggle(ACTION_BAR_AWAKE_CLASS, next);
+		syncViewportListeners();
+	}
+
+	function sleepSoon() {
+		win.clearTimeout(sleepTimer);
+		sleepTimer = win.setTimeout(() => setAwake(false), STACK_GRACE_MS);
+	}
+
+	function onMove(event: PointerEvent) {
+		if (event.pointerType !== "mouse") return;
+		win.clearTimeout(sleepTimer);
+		const bar = findBar();
+		// Once over the bar itself, keep it: the triangle narrows away from its
+		// widest line, and the bar's left buttons must stay reachable.
+		if (awake && bar && event.target && bar.contains(event.target as Node)) return;
+		// The zone's widest line covers at least the bar: its full width as a
+		// horizontal bar, one button cell (its short side) as a stack.
+		// Over a nested row with its own zone (a task inside a timeline block):
+		// that row's bar is the one to wake, never both. Without this the
+		// block's bar could rise over the task's, as the block's triangle runs
+		// down its right edge across its tasks' corners.
+		if (nestedZoneAt(event.target)) {
+			setAwake(false);
+			hideEar();
+			return;
+		}
+		// No bar (it renders conditionally), so nothing for the ear to point at.
+		if (bar) showEar(event);
+		else hideEar();
+		const barWidth = !bar ? 0 : isStack() ? Math.min(bar.offsetWidth, bar.offsetHeight) : bar.offsetWidth;
+		setAwake(
+			inActionZone(
+				event.clientX,
+				event.clientY,
+				host.getBoundingClientRect(),
+				barWidth,
+				opts.fraction,
+				opts.anchor,
+			),
+		);
+	}
+
+	function onLeave(event: PointerEvent) {
+		hideEar();
+		if (!isStack()) {
+			setAwake(false);
+			return;
+		}
+		// Onto the portaled stack: it keeps itself up (onBarEnter/onBarLeave).
+		const to = event.relatedTarget as Node | null;
+		if (stack?.portaled && to && stack.bar.contains(to)) return;
+		sleepSoon();
+	}
+
+	// Pointer over a portaled stack (not the row's descendant, so the row's own
+	// listeners don't see it). ActionStack attaches these to the bar only while
+	// it is portaled.
+	function onBarEnter(event: PointerEvent) {
+		if (event.pointerType === "mouse") win.clearTimeout(sleepTimer);
+	}
+	function onBarLeave(event: PointerEvent) {
+		if (event.pointerType !== "mouse") return;
+		const to = event.relatedTarget as Node | null;
+		// Back onto the row: its pointermove decides.
+		if (to && host.contains(to)) return;
+		sleepSoon();
+	}
+
+	// Keyboard: `:focus-within` shows the bar; lay it out as a stack in place
+	// (never portaled — see action-stack.class.ts).
+	function onFocusIn(event: FocusEvent) {
+		if (!isStack()) return;
+		const bar = findBar();
+		if (!bar || !bar.contains(event.target as Node)) return;
+		// Keyboard focus only. A tap focuses the button it lands on (Android),
+		// and turning the bar into a stack then moved that button away before
+		// the tap's click arrived, so the click missed it.
+		if (!(event.target as Partial<Element>).matches?.(":focus-visible")) return;
+		if (!stack?.portaled) stackFor(bar).place(false, opts.anchor);
+		syncViewportListeners();
+	}
+	function onFocusOut() {
+		// Focus has not moved yet during focusout; check once it has.
+		win.setTimeout(syncViewportListeners, 0);
+	}
+
+	// While the stack is up, a scroll or resize would leave it floating over the
+	// wrong spot. Hide it (mouse), or re-place it in place (keyboard focus).
+	function onViewportChange() {
+		const bar = findBar();
+		const focused = !!bar && bar.contains(host.ownerDocument.activeElement);
+		if (awake) setAwake(false);
+		if (focused && bar && !stack?.portaled) stackFor(bar).place(false, opts.anchor);
+		syncViewportListeners();
+	}
+
+	function syncViewportListeners() {
+		const bar = findBar();
+		const want =
+			!destroyed &&
+			isStack() &&
+			(awake || (!!bar && bar.contains(host.ownerDocument.activeElement)));
+		if (want === viewportListening) return;
+		viewportListening = want;
+		if (want) {
+			win.addEventListener("scroll", onViewportChange, { capture: true, passive: true });
+			win.addEventListener("resize", onViewportChange);
+		} else {
+			win.removeEventListener("scroll", onViewportChange, { capture: true });
+			win.removeEventListener("resize", onViewportChange);
+		}
+	}
+
+	// Whether `target` is inside another action-zone row nested in this one.
+	function nestedZoneAt(target: EventTarget | null): boolean {
+		// Duck-typed: `instanceof Element` fails across pop-out windows.
+		const el = target as Partial<Element> | null;
+		if (typeof el?.closest !== "function") return false;
+		const owner = el.closest(`[${ZONE_ATTR}]`);
+		return owner !== null && owner !== host && host.contains(owner);
+	}
+
+	const touch = touchSelect(host, {
+		findBar,
+		ownsTarget: (el) => !nestedZoneAt(el),
+		awakeClass: ACTIONS_AWAKE_CLASS,
+		menu: () => opts.menu === true,
+	});
+
+	host.setAttribute(ZONE_ATTR, "");
+	host.addEventListener("pointermove", onMove);
+	host.addEventListener("pointerleave", onLeave);
+	host.addEventListener("focusin", onFocusIn);
+	host.addEventListener("focusout", onFocusOut);
+
+	return {
+		update(next: ActionZoneOptions = {}) {
+			const wasStack = isStack();
+			opts = next;
+			syncEarShape();
+			if (wasStack && !isStack()) {
+				stack?.destroy();
+				stack = null;
+			}
+			syncViewportListeners();
+		},
+		destroy() {
+			destroyed = true;
+			clearTimers();
+			touch.destroy();
+			host.removeEventListener("pointermove", onMove);
+			host.removeEventListener("pointerleave", onLeave);
+			host.removeEventListener("focusin", onFocusIn);
+			host.removeEventListener("focusout", onFocusOut);
+			if (viewportListening) {
+				win.removeEventListener("scroll", onViewportChange, { capture: true });
+				win.removeEventListener("resize", onViewportChange);
+				viewportListening = false;
+			}
+			host.classList.remove(ACTIONS_AWAKE_CLASS);
+			host.removeAttribute(ZONE_ATTR);
+			ear.remove();
+			stack?.bar.classList.remove(ACTION_BAR_AWAKE_CLASS);
+			stack?.destroy();
+			stack = null;
+		},
+	};
+}
