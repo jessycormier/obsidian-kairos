@@ -15,7 +15,8 @@ import type { App, EventRef } from "obsidian";
 import { KairosIndex } from "./kairos-index.service";
 import type { IndexDeps, IndexPaths } from "./kairos-index.service";
 import { isFixable, needsNormalizing } from "../../features/projects/project.file";
-import type { Domain, Project } from "../models/core.types";
+import type { Domain } from "../models/domain.interface";
+import type { Project } from "../models/project.interface";
 import type Kairos from "../../main";
 
 export class IndexAdapter {

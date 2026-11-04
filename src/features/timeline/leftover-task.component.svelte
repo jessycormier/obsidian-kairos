@@ -9,7 +9,8 @@
 	// the resurfacing nudge (text, then the association line beneath), all on
 	// the shared item row; purely presentational, the Day view owns every write.
 
-	import type { Association, Task } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Task } from "../../core/models/task.interface";
 	import type { ResolvedAssociation } from "../associations/association.util";
 	import TaskCheckbox from "../tasks/task-checkbox.component.svelte";
 	import AssocMeta from "../associations/association-meta.component.svelte";

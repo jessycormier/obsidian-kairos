@@ -14,7 +14,7 @@
 	import { coarsePointer, placePanel, visibleArea } from "../../shared/actions/picker-place.util";
 	import { onMount, tick } from "svelte";
 	import Popover from "../../shared/components/popover.component.svelte";
-	import type { Association } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
 	import {
 		filterOptions,
 		newNameProblem,

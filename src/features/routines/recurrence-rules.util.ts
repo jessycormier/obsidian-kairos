@@ -15,7 +15,7 @@
 // A monthly day that a month doesn't have (the 31st in April) simply doesn't
 // occur that month. Pure and vault-free.
 
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 
 export type Rule =
 	| { kind: "weekly"; days: number[] } // 0 = Sunday … 6 = Saturday, sorted

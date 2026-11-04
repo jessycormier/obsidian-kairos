@@ -10,7 +10,10 @@
 // logic — the index owns the optimistic commit + file write. `insertEntry` is
 // async only because it may create the target daily note first.
 
-import type { BacklogEntry, Block, ISODate, Task } from "../../core/models/core.types";
+import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
 import { addTaskToUnscheduled, deleteTask } from "../../core/note/note.writer";
 import { ensureNoteForDate, shiftISO, todayISO } from "../../core/note/day-note.util";

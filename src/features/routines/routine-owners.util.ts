@@ -15,7 +15,10 @@
 
 import { resolveAssociation } from "../associations/association.util";
 import { effectiveStatus, projectStatusOn } from "../projects/project.file";
-import type { Association, Domain, ISODate, Project } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { routineAssoc } from "./apply-routines.util";
 import type { Routine } from "./routines.file";
 

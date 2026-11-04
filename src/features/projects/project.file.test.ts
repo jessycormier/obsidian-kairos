@@ -30,7 +30,8 @@ import {
 	setOrder,
 	setRollup,
 } from "./project.file";
-import type { Domain, Project, StatusRecord } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project, StatusRecord } from "../../core/models/project.interface";
 
 const PROJECT = `---
 tags:

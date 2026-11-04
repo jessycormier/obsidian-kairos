@@ -21,15 +21,11 @@ import type { TFile, Vault } from "obsidian";
 import { nextDraftLine } from "./draft-line.util";
 import { serialize } from "./note.serializer";
 import { DEFAULT_HEADING, spliceSection } from "./schedule-section.util";
-import type {
-  Association,
-  Block,
-  Note,
-  SourceRef,
-  Task,
-  TaskStatus,
-  TimeRange,
-} from "../models/core.types";
+import type { Association } from "../models/association.type";
+import type { Block, Note } from "../models/block.interface";
+import type { SourceRef } from "../models/source-ref.interface";
+import type { Task, TaskStatus } from "../models/task.interface";
+import type { TimeRange } from "../models/time.type";
 
 const DEFAULT_BLOCK_TITLE = "New block";
 

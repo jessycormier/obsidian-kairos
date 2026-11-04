@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Menu } from "obsidian";
 import { addBlockMenuItems, type BlockMenuActions } from "./block.menu";
 import { setRepeatHandler } from "../routines/repeat-routine.util";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 
 // A stand-in for Obsidian's Menu that records each item's title and click.
 interface Item {

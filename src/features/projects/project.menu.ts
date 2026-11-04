@@ -6,7 +6,8 @@
 import { MenuItem, type Menu } from "obsidian";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
 import { setProjectDomain, setProjectRollup } from "./project.writer";
-import type { Domain, Project } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
 
 /**
  * A menu item's submenu. `setSubmenu` exists on Obsidian's MenuItem at runtime

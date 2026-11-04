@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { StatusRecord } from "../../core/models/core.types";
+import type { StatusRecord } from "../../core/models/project.interface";
 import { normalizeHistory } from "../projects/project.file";
 import {
 	applyStretchEdit,

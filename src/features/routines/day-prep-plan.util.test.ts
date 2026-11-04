@@ -4,7 +4,7 @@ import { parseRoutines } from "./routines.file";
 import { routinesHash } from "./apply-routines.util";
 import { parseSchedule } from "../../core/note/note.parser";
 import { serialize } from "../../core/note/note.serializer";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 
 // 2026-10-05 Mon · 10-07 Wed · 10-08 Thu · 10-12 Mon.
 const MON = "2026-10-05";

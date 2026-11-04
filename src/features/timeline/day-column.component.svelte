@@ -4,16 +4,11 @@
 	import { onMount } from "svelte";
 	import type { Unsubscriber } from "svelte/store";
 	import { resolveBlocks } from "../../core/note/task-resolver.util";
-	import type {
-		Association,
-		Block,
-		Day,
-		ISODate,
-		ResolvedTask,
-		Task,
-		TaskStatus,
-		TimeRange,
-	} from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Block } from "../../core/models/block.interface";
+	import type { Day } from "../../core/models/day.interface";
+	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
+	import type { ISODate, TimeRange } from "../../core/models/time.type";
 	import { addTaskToUnscheduled, deleteBlock, deleteBlocks, makeBlock, nestTaskUnderBlock, notesWithAdded, notesWithText } from "../../core/note/note.writer";
 	import { moveTaskToBacklog } from "../backlog/backlog.writer";
 	import { formatTimeRange } from "../../core/note/note.parser";

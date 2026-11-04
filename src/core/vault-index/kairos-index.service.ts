@@ -22,18 +22,16 @@
 import { derived, writable } from "svelte/store";
 import type { Readable, Writable } from "svelte/store";
 import { getDateFromPath } from "obsidian-daily-notes-interface";
-import type {
-	Association,
-	BacklogEntry,
-	Block,
-	Day,
-	Domain,
-	Index,
-	ISODate,
-	Project,
-	ResolvedTask,
-	SourceRef,
-} from "../models/core.types";
+import type { Association } from "../models/association.type";
+import type { BacklogEntry } from "../models/backlog-entry.interface";
+import type { Block } from "../models/block.interface";
+import type { Day } from "../models/day.interface";
+import type { Domain } from "../models/domain.interface";
+import type { Index } from "../models/kairos-index.interface";
+import type { Project } from "../models/project.interface";
+import type { SourceRef } from "../models/source-ref.interface";
+import type { ResolvedTask } from "../models/task.interface";
+import type { ISODate } from "../models/time.type";
 import { parseSchedule } from "../note/note.parser";
 import { serialize } from "../note/note.serializer";
 import { parseBacklog, serializeBacklog } from "../../features/backlog/backlog.file";
@@ -100,7 +98,7 @@ export function classify(path: string, settings: IndexPaths): FileKind {
 
 // ─── pure state ────────────────────────────────────────────────
 
-/** The engine's internal mutable form; `Index` (core/models/core.types.ts) is the read shape. */
+/** The engine's internal mutable form; `Index` (core/models/kairos-index.interface.ts) is the read shape. */
 export type IndexState = Index;
 
 export function emptyState(): IndexState {

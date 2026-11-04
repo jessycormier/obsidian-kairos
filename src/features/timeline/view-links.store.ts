@@ -21,7 +21,9 @@
 
 import { get, writable } from "svelte/store";
 import type { Readable } from "svelte/store";
-import type { Block, ISODate, Task } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { sameDrop, type TimelineDrop } from "./task-drop.util";
 
 /**

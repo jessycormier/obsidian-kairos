@@ -10,7 +10,7 @@ import { Notice, Platform, TFile } from "obsidian";
 import type { Unsubscriber } from "svelte/store";
 import { KAIROS_VIEW_TYPE } from "../timeline/day.view";
 import { todayISO } from "../../core/note/day-note.util";
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 import type Kairos from "../../main";
 import { intersect } from "./tour-placement.util";
 import type { Rect } from "./tour-placement.util";

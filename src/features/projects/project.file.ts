@@ -20,15 +20,10 @@
 // vault adapter and writes them back through the index's ordinary edit path.
 
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import type {
-	Domain,
-	ISODate,
-	LifecycleState,
-	Project,
-	SourceRef,
-	StatusAnomaly,
-	StatusRecord,
-} from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { LifecycleState, Project, StatusAnomaly, StatusRecord } from "../../core/models/project.interface";
+import type { SourceRef } from "../../core/models/source-ref.interface";
+import type { ISODate } from "../../core/models/time.type";
 
 const PROJECT_TAG = "kairos/project";
 const DOMAIN_TAG = "kairos/domain";

@@ -28,7 +28,8 @@
 //
 // Pure and vault-free.
 
-import type { Association, TimeRange } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { TimeRange } from "../../core/models/time.type";
 import { parseTime, stripMetadata } from "../../core/note/note.parser";
 import { parseRule, type Rule } from "./recurrence-rules.util";
 

@@ -3,7 +3,8 @@
 // unit-testable and free of Svelte.
 
 import type { KairosSettings } from "../settings/settings.tab";
-import type { Block, Minutes } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Minutes } from "../../core/models/time.type";
 
 export interface TimelineGeometry {
 	startHour: number; // first hour shown in the gutter

@@ -20,7 +20,11 @@
 //
 // Pure and vault-free; the caller persists both days.
 
-import type { Association, Block, Day, ISODate, Task, TaskStatus } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Day } from "../../core/models/day.interface";
+import type { Task, TaskStatus } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { copyTaskIntoDay, withoutTask } from "../../core/note/note.writer";
 import { nextDraftLine } from "../../core/note/draft-line.util";
 

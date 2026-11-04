@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 import type { Readable, Writable } from 'svelte/store';
 import { DEFAULT_SETTINGS, KairosSettingTab } from './features/settings/settings.tab';
 import type { KairosSettings } from './features/settings/settings.tab';
-import type { ISODate } from './core/models/core.types';
+import type { ISODate } from './core/models/time.type';
 import { KAIROS_VIEW_TYPE, KairosView } from './features/timeline/day.view';
 import { KAIROS_WEEK_VIEW_TYPE, KairosWeekView } from './features/timeline/week.view';
 import { KAIROS_GRID_VIEW_TYPE, KairosGridView } from './features/grid/grid.view';

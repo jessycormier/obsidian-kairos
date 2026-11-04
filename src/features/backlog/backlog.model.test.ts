@@ -6,7 +6,7 @@ import {
 	surfaceDate,
 	surfacedOn,
 } from "./backlog.model";
-import type { BacklogEntry } from "../../core/models/core.types";
+import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 import type { Resolver } from "../../core/vault-index/kairos-index.service";
 
 const P = "Backlog.md";

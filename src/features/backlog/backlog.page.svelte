@@ -17,7 +17,9 @@
 	import { onMount } from "svelte";
 	import type { Readable, Unsubscriber } from "svelte/store";
 	import type { KairosSettings } from "../settings/settings.tab";
-	import type { Association, BacklogEntry, ISODate } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+	import type { ISODate } from "../../core/models/time.type";
 	import type { KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { tooltip } from "../../shared/actions/tooltip.action";

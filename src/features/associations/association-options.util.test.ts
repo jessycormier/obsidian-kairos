@@ -5,7 +5,8 @@ import {
 	newNameProblem,
 	offersCreate,
 } from "./association-options.util";
-import type { Domain, Project, StatusRecord } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project, StatusRecord } from "../../core/models/project.interface";
 
 const hist = (...rs: [string, "active" | "inactive" | "archived"][]): StatusRecord[] =>
 	rs.map(([date, status]) => ({ date, status }));

@@ -9,7 +9,8 @@
 	// through projectActions; the view re-resolves the entity from the live
 	// feed, so this pane refreshes after each one.
 
-	import type { Domain, LifecycleState, Project } from "../../core/models/core.types";
+	import type { Domain } from "../../core/models/domain.interface";
+	import type { LifecycleState, Project } from "../../core/models/project.interface";
 	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
 	import {
 		setDomainColor,

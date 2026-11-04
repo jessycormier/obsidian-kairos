@@ -14,7 +14,8 @@
 // Everything snaps to `SNAP_MINUTES` and is clamped to the visible day. Blocks
 // may overlap (spec §2.1), so there is no collision handling here at all.
 
-import type { Block, Minutes, TimeRange } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Minutes, TimeRange } from "../../core/models/time.type";
 import {
 	MIN_BLOCK_MINUTES,
 	SNAP_MINUTES,

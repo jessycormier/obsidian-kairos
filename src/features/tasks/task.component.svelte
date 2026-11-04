@@ -15,7 +15,8 @@
 
 	import { Menu, Notice } from "obsidian";
 	import type { Snippet } from "svelte";
-	import type { Association, Task, TaskStatus } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Task, TaskStatus } from "../../core/models/task.interface";
 	import type { Highlight } from "../timeline/view-links.store";
 	import type { ResolvedAssociation } from "../associations/association.util";
 	import { tooltip } from "../../shared/actions/tooltip.action";

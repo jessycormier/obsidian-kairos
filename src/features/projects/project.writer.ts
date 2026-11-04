@@ -10,7 +10,9 @@
 // edit. Rename and create are gated by `nameCollision` (spec §4.4 conflict guard)
 // — the caller checks first and surfaces the clash to the user.
 
-import type { Domain, ISODate, LifecycleState, Project, StatusRecord } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { LifecycleState, Project, StatusRecord } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
 import {
 	appendActivePeriod,

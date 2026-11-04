@@ -19,7 +19,8 @@
 // Routines whose project or domain isn't active that day are left out before
 // they get here (routine-owners.util.ts).
 
-import type { Block, ISODate } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { missingFrom, routinesFor, routinesHash } from "./apply-routines.util";
 import { activeRoutines, type OwnerActive } from "./routine-owners.util";
 import type { BlockRoutine, Routine, TaskRoutine } from "./routines.file";

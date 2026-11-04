@@ -3,7 +3,9 @@
 // render row labels the same way (name + status note + tinted domain icon +
 // a hover popover); this keeps that shape and its derivation in one place.
 
-import type { Domain, ISODate, LifecycleState, Project } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { LifecycleState, Project } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { effectiveRecord } from "../../features/projects/project.file";
 
 /** Everything `row-label.component.svelte` needs to render one row's label + hover card. */

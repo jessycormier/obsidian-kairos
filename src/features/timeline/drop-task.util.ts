@@ -6,7 +6,10 @@
 // goes through here, so they all write the same thing.
 
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
-import type { Association, Block, ISODate, Task } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { ensureNoteForDate } from "../../core/note/day-note.util";
 import {
 	commitTaskDrop,

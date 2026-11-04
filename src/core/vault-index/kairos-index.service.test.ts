@@ -25,7 +25,7 @@ import {
 import { parseSchedule } from "../note/note.parser";
 import { serialize } from "../note/note.serializer";
 import { addTaskToUnscheduled, makeBlock } from "../note/note.writer";
-import type { BacklogEntry } from "../models/core.types";
+import type { BacklogEntry } from "../models/backlog-entry.interface";
 
 const PATHS: IndexPaths = {
 	projectsFolder: "Projects",

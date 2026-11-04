@@ -14,7 +14,7 @@
 // down in a unit test instead of checked by eye in the running plugin.
 
 import { shiftDays } from "../gantt/gantt-coordinates.util";
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 
 /** Each side of the window spans 1–7 days — the settings sliders' limits. */
 export const MIN_SPAN = 1;

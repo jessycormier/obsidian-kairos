@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseBacklog, serializeBacklog } from "./backlog.file";
-import type { BacklogEntry } from "../../core/models/core.types";
+import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 
 const P = "Backlog.md";
 

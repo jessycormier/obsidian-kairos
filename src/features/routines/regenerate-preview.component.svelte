@@ -7,7 +7,9 @@
 	// one change per row with a checkbox; tasks with no block come last.
 	// Read-only throughout, with TimelineBlock in its read-only mode.
 
-	import type { Association, Block, ResolvedTask } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Block } from "../../core/models/block.interface";
+	import type { ResolvedTask } from "../../core/models/task.interface";
 	import type { Resolver } from "../../core/vault-index/kairos-index.service";
 	import type { KairosSettings } from "../settings/settings.tab";
 	import { formatTimeRange } from "../../core/note/note.parser";

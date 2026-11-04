@@ -10,7 +10,7 @@
 	// parent owns persistence. Every task row uses it, so the checkbox looks and
 	// behaves identically everywhere.
 
-	import type { TaskStatus } from "../../core/models/core.types";
+	import type { TaskStatus } from "../../core/models/task.interface";
 	import { longpress } from "../../shared/actions/longpress.action";
 
 	interface Props {

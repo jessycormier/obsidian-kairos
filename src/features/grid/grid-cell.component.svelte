@@ -20,7 +20,10 @@
 
 	import DraftTask from "../tasks/draft-task.component.svelte";
 	import { Menu } from "obsidian";
-	import type { Association, Block, ISODate, ResolvedTask, Task, TaskStatus } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Block } from "../../core/models/block.interface";
+	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
+	import type { ISODate } from "../../core/models/time.type";
 	import type { Resolver } from "../../core/vault-index/kairos-index.service";
 	import { isUnscheduledBlock, sourceKey, type BlockGroup } from "./grid.model";
 	import { formatClock } from "../../core/note/note.parser";

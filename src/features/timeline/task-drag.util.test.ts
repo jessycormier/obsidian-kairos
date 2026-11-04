@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 import { incomingBlock } from "./task-drag.util";
 
 const block: Block = {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Domain, Project, StatusRecord } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project, StatusRecord } from "../../core/models/project.interface";
 import { routinesHash } from "./apply-routines.util";
 import { activeRoutines, ownerActive } from "./routine-owners.util";
 import { manualMessage, planDayPrep } from "./day-prep-plan.util";

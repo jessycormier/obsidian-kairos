@@ -20,7 +20,9 @@
 // block is a target, not just its task strip — via the `data-block-line`
 // fallback. Append is signalled with a large index the caller's insert clamps.
 
-import type { Block, ISODate, ResolvedTask, Task, TimeRange } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { ResolvedTask, Task } from "../../core/models/task.interface";
+import type { ISODate, TimeRange } from "../../core/models/time.type";
 import type { TimelineDrop } from "./task-drop.util";
 import {
   dropRange,

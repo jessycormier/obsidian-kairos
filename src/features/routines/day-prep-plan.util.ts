@@ -23,7 +23,8 @@
 // Routines whose project or domain isn't active on the date are left out of
 // everything here, the hash included (decision 87, routine-owners.util.ts).
 
-import type { Block, ISODate } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { ROUTINES_KEY, applyRoutines, routinesFor, routinesHash } from "./apply-routines.util";
 import { activeRoutines, type OwnerActive } from "./routine-owners.util";
 import type { ParsedRoutines, Routine } from "./routines.file";

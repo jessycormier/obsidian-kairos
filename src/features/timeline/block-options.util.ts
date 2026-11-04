@@ -6,7 +6,8 @@
 // gesture) and, later, the grid can offer the same "move this task into a block"
 // affordance from one source of truth.
 
-import type { Block, TimeRange } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { TimeRange } from "../../core/models/time.type";
 import { formatTimeRange } from "../../core/note/note.parser";
 
 export interface BlockOption {

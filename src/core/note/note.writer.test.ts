@@ -17,7 +17,8 @@ import {
 } from "./note.writer";
 import { parseSchedule } from "./note.parser";
 import { serialize } from "./note.serializer";
-import type { Block, Task } from "../models/core.types";
+import type { Block } from "../models/block.interface";
+import type { Task } from "../models/task.interface";
 
 // A timed block with an explicit project association and two child tasks: one
 // with its own association, one inheriting the block's.

@@ -17,7 +17,8 @@
 	// on the shared item row (ItemRow), tinted.
 
 	import { Menu } from "obsidian";
-	import type { Association, BacklogEntry } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 	import type { ResolvedAssociation } from "../associations/association.util";
 	import { tooltip } from "../../shared/actions/tooltip.action";
 	import AssocMeta from "../associations/association-meta.component.svelte";

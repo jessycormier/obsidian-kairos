@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyRoutines, routinesHash, routinesStale } from "./apply-routines.util";
 import { parseRoutines } from "./routines.file";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 
 // 2026-10-05 is a Monday, 2026-10-06 a Tuesday, 2026-10-10 a Saturday.
 const MON = "2026-10-05";

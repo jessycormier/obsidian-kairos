@@ -1,13 +1,9 @@
 <script lang="ts">
   import { icon as drawIcon } from "../../shared/actions/icon.action";
-  import type {
-    Association,
-    Block,
-    ResolvedTask,
-    Task,
-    TaskStatus,
-    TimeRange,
-  } from "../../core/models/core.types";
+  import type { Association } from "../../core/models/association.type";
+  import type { Block } from "../../core/models/block.interface";
+  import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
+  import type { TimeRange } from "../../core/models/time.type";
   import { formatTimeRange, parseTimeRangeText } from "../../core/note/note.parser";
   import {
     blockLit,

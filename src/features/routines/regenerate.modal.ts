@@ -7,7 +7,7 @@
 import { App, ButtonComponent, Modal } from "obsidian";
 import { mount, unmount } from "svelte";
 import type { Component } from "svelte";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 import type { Resolver } from "../../core/vault-index/kairos-index.service";
 import type { KairosSettings } from "../settings/settings.tab";
 import RegeneratePreview from "./regenerate-preview.component.svelte";

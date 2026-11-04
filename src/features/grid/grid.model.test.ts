@@ -19,12 +19,10 @@ import {
 	rowAssociation,
 } from "./grid.model";
 import type { GridDay, GridSnapshot } from "../../core/vault-index/kairos-index.service";
-import type {
-	Association,
-	Domain,
-	Project,
-	ResolvedTask,
-} from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
+import type { ResolvedTask } from "../../core/models/task.interface";
 
 // Reference "today" for row-label status derivation. The fixtures' histories are
 // mostly empty (→ active default), so the exact value rarely matters, but a fixed

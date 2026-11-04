@@ -2,7 +2,7 @@
 	// An item's project or domain on its meta line (ItemRow's `meta`): the
 	// kind's icon and the name. When `linked`, Ctrl/Cmd-click opens it.
 
-	import type { Association } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
 
 	interface Props {
 		association: Association;

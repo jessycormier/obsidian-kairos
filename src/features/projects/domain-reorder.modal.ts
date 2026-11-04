@@ -19,7 +19,7 @@
 // drop target is marked while dragging and the move is committed on pointerup.
 
 import { App, Modal, Setting } from "obsidian";
-import type { Domain } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
 
 export class DomainReorderModal extends Modal {
 	private order: Domain[];

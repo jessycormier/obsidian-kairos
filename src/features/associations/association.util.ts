@@ -12,7 +12,9 @@
 //     dangling-association / unassociated case, and it must look exactly like a
 //     tag did before any project files existed.
 
-import type { Association, Domain, Project } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
 
 /** A resolved association ready for rendering and navigation. */
 export interface ResolvedAssociation {

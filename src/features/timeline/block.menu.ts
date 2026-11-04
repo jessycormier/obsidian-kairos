@@ -8,7 +8,7 @@
 // Only a type comes from `obsidian`, so this stays importable from a unit test.
 
 import type { Menu } from "obsidian";
-import type { Block } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
 import { requestRepeatBlock } from "../routines/repeat-routine.util";
 
 export interface BlockMenuActions {

@@ -18,7 +18,10 @@
 // (`claimBlocks`), tasks by text — here regardless of association, since a
 // routine whose project changed should update its copy, not add a second one.
 
-import type { Association, Block, Task, TimeRange } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { TimeRange } from "../../core/models/time.type";
 import {
 	claimBlocks,
 	compatibleAssoc,

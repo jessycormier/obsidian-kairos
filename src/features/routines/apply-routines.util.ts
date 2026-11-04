@@ -22,7 +22,10 @@
 // user deliberately deleted. Editing a routine for another day, reordering
 // headings, or reformatting whitespace leaves a date's hash unchanged.
 
-import type { Association, Block, ISODate, Task } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { nextDraftLine } from "../../core/note/draft-line.util";
 import { addTaskToUnscheduled } from "../../core/note/note.writer";
 import { occursOn } from "./recurrence-rules.util";

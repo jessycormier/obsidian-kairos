@@ -22,7 +22,9 @@
 //
 // Pure and vault-free, like the rest of src/gantt, so it runs under vitest.
 
-import type { Domain, ISODate, Project, StatusRecord } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project, StatusRecord } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import type { ProjectsDomains } from "../../core/vault-index/kairos-index.service";
 import { effectiveStatus } from "../projects/project.file";
 

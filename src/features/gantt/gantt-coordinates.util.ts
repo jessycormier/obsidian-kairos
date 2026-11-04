@@ -10,7 +10,7 @@
 // units — a Mon–Sun week, a calendar month, a Jan–Mar quarter, a Jan–Dec year —
 // so stepping is by whole units and the header can label real weeks/months.
 
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 
 export const ROW_HEIGHT = 34;
 export const ROW_GAP = 6;

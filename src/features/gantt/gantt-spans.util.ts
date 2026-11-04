@@ -10,7 +10,8 @@
 // hard the stretch is pushed is a separate, explicit field: the record's 0–5
 // `intensity`, carried onto active spans only.
 
-import type { ISODate, LifecycleState, StatusRecord } from "../../core/models/core.types";
+import type { LifecycleState, StatusRecord } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 
 export interface Span {
 	start: ISODate;

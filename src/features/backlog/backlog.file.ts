@@ -25,7 +25,10 @@
 //
 // comparing structure only (SourceRef.line is re-derived by the parser).
 
-import type { Association, BacklogEntry, ISODate, SourceRef } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+import type { SourceRef } from "../../core/models/source-ref.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { parseAssociation } from "../../core/note/note.parser";
 
 // ─── grammar ───────────────────────────────────────────────────

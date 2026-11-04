@@ -22,7 +22,10 @@
 // (edited by hand, synced), `RoutinesConflict` is thrown rather than editing the
 // wrong line. Pure and vault-free.
 
-import type { Association, Block, Task, TimeRange } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { TimeRange } from "../../core/models/time.type";
 import { serializeBlock, serializeTask } from "../../core/note/note.serializer";
 import { stripMetadata } from "../../core/note/note.parser";
 import {

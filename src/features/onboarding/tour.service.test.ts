@@ -12,7 +12,7 @@ import {
 import type { BlockSummary } from "./tour-progress.util";
 import { STEPS, isStepDone, resumeStep } from "./tour-steps.util";
 import type { StepContext } from "./tour-steps.util";
-import type { Day } from "../../core/models/core.types";
+import type { Day } from "../../core/models/day.interface";
 
 const path = "2026-10-29.md";
 

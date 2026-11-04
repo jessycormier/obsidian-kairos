@@ -32,14 +32,11 @@
 // written (a task assoc that duplicates its block's is kept, not dropped) and
 // does not resolve inheritance — that is left to the resolution layer.
 
-import type {
-  Association,
-  Block,
-  SourceRef,
-  Task,
-  TaskStatus,
-  TimeRange,
-} from "../models/core.types";
+import type { Association } from "../models/association.type";
+import type { Block } from "../models/block.interface";
+import type { SourceRef } from "../models/source-ref.interface";
+import type { Task, TaskStatus } from "../models/task.interface";
+import type { TimeRange } from "../models/time.type";
 import { DEFAULT_HEADING, headingMatcher } from "./schedule-section.util";
 
 // ─── configuration ─────────────────────────────────────────────

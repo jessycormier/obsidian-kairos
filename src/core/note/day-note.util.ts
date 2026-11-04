@@ -16,7 +16,7 @@ import {
 	getAllDailyNotes,
 	getDailyNote,
 } from "obsidian-daily-notes-interface";
-import type { ISODate } from "../models/core.types";
+import type { ISODate } from "../models/time.type";
 
 const ISO = "YYYY-MM-DD";
 

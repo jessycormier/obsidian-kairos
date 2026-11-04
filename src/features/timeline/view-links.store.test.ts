@@ -6,7 +6,8 @@ import {
 	taskHighlight,
 	ViewLinks,
 } from "./view-links.store";
-import type { Block, Task } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
 
 const path = "2026-10-12 Mon.md";
 const lectures: Block = {

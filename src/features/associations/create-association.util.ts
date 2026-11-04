@@ -7,7 +7,7 @@
 
 import { Notice } from "obsidian";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
-import type { Association } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
 import { newNameProblem } from "./association-options.util";
 
 export async function createAssociation(

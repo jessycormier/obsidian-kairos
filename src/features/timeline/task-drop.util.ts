@@ -12,7 +12,10 @@
 //   drop on empty time   a new block at that time, holding the task
 //   Ctrl/Cmd held        drop a copy instead; the source day isn't touched
 
-import type { Association, Block, ISODate, Task, TimeRange } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { ISODate, TimeRange } from "../../core/models/time.type";
 import { nextDraftLine } from "../../core/note/draft-line.util";
 import {
 	copyTaskIntoBlock,

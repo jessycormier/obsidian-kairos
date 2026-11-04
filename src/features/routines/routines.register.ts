@@ -5,7 +5,8 @@
 
 import { Notice, type WorkspaceLeaf } from "obsidian";
 import type Kairos from "../../main";
-import type { Block, Task } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
 import { KAIROS_ROUTINES_VIEW_TYPE, KairosRoutinesView } from "./routines.view";
 import { RuleModal } from "./rule.modal";
 import { blockRepeatDraft, repeatDraft, setRepeatHandler } from "./repeat-routine.util";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseSchedule } from "./note.parser";
 import { serialize } from "./note.serializer";
-import type { Block } from "../models/core.types";
+import type { Block } from "../models/block.interface";
 
 // Round-trips for the block/task states the day-view actions produce. The
 // heading defaults to "## Schedule"; parseSchedule reads it back.

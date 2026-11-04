@@ -15,7 +15,9 @@
 // plugin-wide handler the plugin installs on load (like the draft-line
 // allocator), so the action needs no prop threaded through every view.
 
-import type { Block, Task, TimeRange } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Task } from "../../core/models/task.interface";
+import type { TimeRange } from "../../core/models/time.type";
 import type { Rule } from "./recurrence-rules.util";
 import type { RoutineDraft } from "./routines.writer";
 

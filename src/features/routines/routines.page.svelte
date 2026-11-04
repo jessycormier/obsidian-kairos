@@ -13,7 +13,8 @@
 
 	import { Menu, Notice, type App } from "obsidian";
 	import { onMount } from "svelte";
-	import type { Association, Task } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { Task } from "../../core/models/task.interface";
 	import type { KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { singleLine } from "../../shared/actions/autogrow.action";

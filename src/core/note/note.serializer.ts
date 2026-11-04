@@ -25,7 +25,9 @@
 // cannot round-trip. That is a parser limitation, not one this serializer can
 // paper over; such titles are emitted verbatim.
 
-import type { Association, Block, Task, TaskStatus } from "../models/core.types";
+import type { Association } from "../models/association.type";
+import type { Block } from "../models/block.interface";
+import type { Task, TaskStatus } from "../models/task.interface";
 import { DEFAULT_HEADING, normalizeHeading } from "./schedule-section.util";
 import { formatTimeRange } from "./note.parser";
 

@@ -2,7 +2,7 @@
 // under one header per project or domain, the way the Grid groups its rows,
 // so a row no longer repeats its association on a line of its own.
 
-import type { Association } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
 import type { ResolvedAssociation } from "../associations/association.util";
 
 export interface AssocGroup<T> {

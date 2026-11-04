@@ -1,4 +1,6 @@
-import type { Block, ISODate, ResolvedTask } from "../models/core.types";
+import type { Block } from "../models/block.interface";
+import type { ResolvedTask } from "../models/task.interface";
+import type { ISODate } from "../models/time.type";
 
 export function resolveBlocks(blocks: Block[], date: ISODate): ResolvedTask[] {
     const tasks: ResolvedTask[] = [];

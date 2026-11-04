@@ -4,14 +4,10 @@
 // explicitly; day-column.component.svelte's exports must stay assignable to it.
 
 import type { ResolvedAssociation } from "../associations/association.util";
-import type {
-	Association,
-	Block,
-	ResolvedTask,
-	Task,
-	TaskStatus,
-	TimeRange,
-} from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
+import type { TimeRange } from "../../core/models/time.type";
 
 export interface DayColumnHandle {
 	addUnscheduledTask(): Promise<void>;

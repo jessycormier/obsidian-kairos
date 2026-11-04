@@ -5,16 +5,12 @@
 	import type { Readable } from "svelte/store";
 	import type { KairosSettings } from "../settings/settings.tab";
 	import { showDayMenu } from "./day.menu";
-	import type {
-		Association,
-		BacklogEntry,
-		Block,
-		ISODate,
-		Task,
-		TaskStatus,
-	} from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
+	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+	import type { Block } from "../../core/models/block.interface";
+	import type { Task, TaskStatus } from "../../core/models/task.interface";
+	import type { ISODate, TimeRange } from "../../core/models/time.type";
 	import type { Routine } from "../routines/routines.file";
-	import type { TimeRange } from "../../core/models/core.types";
 	import { addTaskToUnscheduled, moveBlockAcrossDays, setTaskStatus } from "../../core/note/note.writer";
 	import { nextDraftLine } from "../../core/note/draft-line.util";
 	import { blockOptions, type BlockOption } from "./block-options.util";

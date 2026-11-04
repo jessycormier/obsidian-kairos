@@ -10,7 +10,8 @@
 // it always yields the same groups, so the grouping/sorting is unit-testable
 // without Svelte or Obsidian.
 
-import type { BacklogEntry, ISODate } from "../../core/models/core.types";
+import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+import type { ISODate } from "../../core/models/time.type";
 import type { Resolver } from "../../core/vault-index/kairos-index.service";
 
 // ─── group types ───────────────────────────────────────────────

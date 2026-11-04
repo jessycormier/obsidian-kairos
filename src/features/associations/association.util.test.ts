@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { resolveAssociation } from "./association.util";
-import type { Association, Domain, Project } from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
 
 function domain(over: Partial<Domain> = {}): Domain {
 	return {

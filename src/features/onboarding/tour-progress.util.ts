@@ -5,7 +5,8 @@
 //
 // Pure: no Obsidian imports, so it's unit-tested in plain Node.
 
-import type { Day, TaskStatus } from "../../core/models/core.types";
+import type { Day } from "../../core/models/day.interface";
+import type { TaskStatus } from "../../core/models/task.interface";
 
 /** One scheduled block, reduced to what the tour compares. */
 export interface BlockSummary {

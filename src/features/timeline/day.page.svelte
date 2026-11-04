@@ -6,16 +6,11 @@
 	import type { Readable, Unsubscriber } from "svelte/store";
 	import { resolveBlocks } from "../../core/note/task-resolver.util";
 	import type { KairosSettings } from "../settings/settings.tab";
-	import type {
-		BacklogEntry,
-		Block,
-		Day,
-		ISODate,
-		ResolvedTask,
-		Task,
-		TaskStatus,
-		TimeRange,
-	} from "../../core/models/core.types";
+	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+	import type { Block } from "../../core/models/block.interface";
+	import type { Day } from "../../core/models/day.interface";
+	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
+	import type { ISODate, TimeRange } from "../../core/models/time.type";
 	import type { Routine } from "../routines/routines.file";
 	import {
 		deleteBlock,
@@ -43,7 +38,7 @@
 	import BacklogNudge from "../backlog/backlog-nudge.component.svelte";
 	import { blockOptions, type BlockOption } from "./block-options.util";
 	import { daySignature, type KairosIndex, type Resolver } from "../../core/vault-index/kairos-index.service";
-	import type { Association } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import {
 		dateFromISO,

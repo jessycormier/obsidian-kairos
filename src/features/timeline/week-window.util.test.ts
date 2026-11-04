@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 import {
 	anchorFor,
 	clampSpan,

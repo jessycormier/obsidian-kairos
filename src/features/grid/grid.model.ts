@@ -34,16 +34,12 @@
 // per-day effective status then drives cell dimming (see `dayStatus`): a column
 // where the entity was inactive/archived reads as read-only history.
 
-import type {
-	Association,
-	Block,
-	Domain,
-	ISODate,
-	LifecycleState,
-	Project,
-	ResolvedTask,
-	StatusRecord,
-} from "../../core/models/core.types";
+import type { Association } from "../../core/models/association.type";
+import type { Block } from "../../core/models/block.interface";
+import type { Domain } from "../../core/models/domain.interface";
+import type { LifecycleState, Project, StatusRecord } from "../../core/models/project.interface";
+import type { ResolvedTask } from "../../core/models/task.interface";
+import type { ISODate } from "../../core/models/time.type";
 import type { GridSnapshot } from "../../core/vault-index/kairos-index.service";
 import { effectiveRecord, effectiveStatus, projectStatusOn } from "../projects/project.file";
 import { rowLabelInfo, type RowLabelInfo } from "../../shared/components/row-label.util";

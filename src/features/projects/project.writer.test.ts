@@ -7,7 +7,8 @@ import {
 	serializeProjectFrontmatter,
 } from "./project.file";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
-import type { Domain, Project } from "../../core/models/core.types";
+import type { Domain } from "../../core/models/domain.interface";
+import type { Project } from "../../core/models/project.interface";
 
 // A status change records its reason, and — since any write emits the status map
 // canonically — normalises the file's fixable entries as a side effect while

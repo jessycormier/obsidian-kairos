@@ -6,7 +6,7 @@
 
 import { Menu, TFile } from "obsidian";
 import type { App } from "obsidian";
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 import type { RoutineActions } from "../routines/routines-feed.store";
 import { ensureNoteForDate, todayISO } from "../../core/note/day-note.util";
 

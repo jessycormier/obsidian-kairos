@@ -11,7 +11,8 @@ import {
 	scheduleTaskInNewBlock,
 	scheduleTaskInNewBlockAcrossDays,
 } from "./note.writer";
-import type { Block, Task } from "../models/core.types";
+import type { Block } from "../models/block.interface";
+import type { Task } from "../models/task.interface";
 
 const TWO_PM = { start: 840, end: 870 };
 

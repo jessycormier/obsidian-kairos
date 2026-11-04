@@ -15,7 +15,7 @@
 	import DraftTask from "../tasks/draft-task.component.svelte";
 	import IconButton from "../../shared/components/icon-button.component.svelte";
 	import { icon as drawIcon } from "../../shared/actions/icon.action";
-	import type { Association } from "../../core/models/core.types";
+	import type { Association } from "../../core/models/association.type";
 	import type { ResolvedAssociation } from "./association.util";
 
 	interface Props {

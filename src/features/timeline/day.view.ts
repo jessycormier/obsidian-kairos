@@ -4,7 +4,7 @@ import type { Component } from "svelte";
 import DayView from "./day.page.svelte";
 import type Kairos from "../../main";
 import type { KairosSettings } from "../settings/settings.tab";
-import type { ISODate } from "../../core/models/core.types";
+import type { ISODate } from "../../core/models/time.type";
 import { addDayMenuItems } from "./day.menu";
 
 export const KAIROS_VIEW_TYPE = "kairos-day-view";

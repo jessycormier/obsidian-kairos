@@ -13,7 +13,8 @@
 	// (StatusHistory); clicking a bar starts on its intention; its intensity
 	// bars pick a level.
 
-	import type { ISODate, LifecycleState, StatusRecord } from "../../core/models/core.types";
+	import type { LifecycleState, StatusRecord } from "../../core/models/project.interface";
+	import type { ISODate } from "../../core/models/time.type";
 	import { dateFromISO } from "../../core/note/day-note.util";
 	import { shiftDays } from "../gantt/gantt-coordinates.util";
 	import SpanBar from "./span-bar.component.svelte";

@@ -6,7 +6,8 @@
 // apart (StatusHistory, StatusStrip) so a reason sits on the change it
 // explains; the file keeps one record per transition, unchanged.
 
-import type { ISODate, StatusRecord } from "../../core/models/core.types";
+import type { StatusRecord } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { daysBetween, shiftDays } from "../gantt/gantt-coordinates.util";
 
 export interface Stretch {

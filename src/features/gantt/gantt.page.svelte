@@ -15,7 +15,9 @@
 	import { onMount, tick } from "svelte";
 	import { Menu } from "obsidian";
 	import type { Unsubscriber } from "svelte/store";
-	import type { Domain, ISODate, LifecycleState, Project, StatusRecord } from "../../core/models/core.types";
+	import type { Domain } from "../../core/models/domain.interface";
+	import type { LifecycleState, Project, StatusRecord } from "../../core/models/project.interface";
+	import type { ISODate } from "../../core/models/time.type";
 	import type { KairosIndex, ProjectsDomains } from "../../core/vault-index/kairos-index.service";
 	import { dateFromISO, isoFromDate, todayISO } from "../../core/note/day-note.util";
 	import {

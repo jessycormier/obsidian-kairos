@@ -11,7 +11,7 @@
 	// clear of them; GridView passes it this element's width.
 
 	import { formatShortDate } from "../../core/note/day-note.util";
-	import type { ISODate } from "../../core/models/core.types";
+	import type { ISODate } from "../../core/models/time.type";
 	import { hoverHold } from "../../shared/actions/hover-hold.action";
 	import { icon } from "../../shared/actions/icon.action";
 	import { placeUnderAnchor } from "../../shared/utils/floating.util";

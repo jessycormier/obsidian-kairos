@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { carryOver, leftovers, previousDay } from "./carry-over.util";
 import { parseSchedule } from "../../core/note/note.parser";
 import { serialize } from "../../core/note/note.serializer";
-import type { Block, Day } from "../../core/models/core.types";
+import type { Block } from "../../core/models/block.interface";
+import type { Day } from "../../core/models/day.interface";
 
 function day(path: string): Block[] {
 	return [

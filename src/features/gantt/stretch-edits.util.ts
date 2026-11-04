@@ -16,7 +16,8 @@
 // move never lands half-written. `bounds` gives the dates a gesture may reach, so
 // a drag can clamp live; `apply` clamps again, so a caller can't overshoot.
 
-import type { ISODate, StatusRecord } from "../../core/models/core.types";
+import type { StatusRecord } from "../../core/models/project.interface";
+import type { ISODate } from "../../core/models/time.type";
 import { daysBetween, shiftDays } from "./gantt-coordinates.util";
 
 /** Which date a gesture changes: the opener's, the (exclusive) end, or the
