@@ -14,20 +14,8 @@ import type { Domain } from "../../core/models/domain.interface";
 import type { LifecycleState, Project, StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
-import {
-	appendActivePeriod,
-	appendStatus,
-	editStatusRecord,
-	removeStatusRecord,
-	renameWithAlias,
-	replaceHistory,
-	setColor,
-	setDescription,
-	setDomain,
-	setOrder,
-	setRollup,
-	type StatusEdit,
-} from "./project.file";
+import { appendActivePeriod, appendStatus, editStatusRecord, removeStatusRecord, renameWithAlias, replaceHistory, setColor, setDescription, setDomain, setOrder, setRollup } from "./project.file";
+import type { StatusEdit } from "./project-file.interface";
 
 // ── status history (a hands-off log; editable through the guarded views) ──
 //

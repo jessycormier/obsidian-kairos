@@ -15,38 +15,31 @@
 	import { onMount } from "svelte";
 	import type { Association } from "../../core/models/association.type";
 	import type { Task } from "../../core/models/task.interface";
-	import type { KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { singleLine } from "../../shared/actions/autogrow.action";
 	import TaskRow from "../tasks/task.component.svelte";
 	import RoutineGroupHeader from "./routine-group-header.component.svelte";
 	import AssocGroup from "../associations/association-group.component.svelte";
 	import BlockPicker from "../timeline/block-picker.component.svelte";
-	import type { BlockOption } from "../timeline/block-options.util";
+	import type { BlockOption } from "../timeline/block-options.interface";
 	import AssociationPicker from "../associations/association-picker.component.svelte";
 	import { createAssociation } from "../associations/create-association.util";
 	import { RuleModal } from "./rule.modal";
 	import type { Readable } from "svelte/store";
 	import type { RoutinesStore } from "./routines.store";
-	import type { OwnerActive } from "./routine-owners.util";
+	import type { OwnerActive } from "./routine-owners.type";
 	import { routineAssoc } from "./apply-routines.util";
 	import { todayISO } from "../../core/note/day-note.util";
 	import { formatClock, formatTimeRange, parseTimeRangeText } from "../../core/note/note.parser";
-	import {
-		type ParsedRoutines,
-		type Routine,
-		type TaskRoutine,
-	} from "./routines.file";
-	import { blockGroupsOf, groupRoutines, type RoutineGroup } from "./routines.model";
-	import {
-		addRoutine,
-		draftOf,
-		removeRoutine,
-		scheduleInNewBlock,
-		updateRoutine,
-		type RoutineDraft,
-	} from "./routines.writer";
-	import { parseRule, ruleKey, ruleSentence, type Rule } from "./recurrence-rules.util";
+	import type { ParsedRoutines, Routine, TaskRoutine } from "./routines-file.interface";
+	import { blockGroupsOf, groupRoutines } from "./routines.model";
+	import type { RoutineGroup } from "./routines.interface";
+	import { addRoutine, draftOf, removeRoutine, scheduleInNewBlock, updateRoutine } from "./routines.writer";
+	import type { RoutineDraft } from "./routines-writer.type";
+	import { parseRule, ruleKey, ruleSentence } from "./recurrence-rules.util";
+	import type { Rule } from "./recurrence-rules.type";
 
 	interface Props {
 		app: App;

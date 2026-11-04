@@ -16,34 +16,9 @@
 
 import type { Block } from "../../core/models/block.interface";
 import type { Minutes, TimeRange } from "../../core/models/time.type";
-import {
-	MIN_BLOCK_MINUTES,
-	SNAP_MINUTES,
-	clampToDay,
-	offsetToMinutes,
-	snap,
-	type TimelineGeometry,
-} from "./timeline-layout.util";
-
-export type GestureMode = "move" | "resize-top" | "resize-bottom" | "create";
-
-// One captured block's starting range, so a gesture is computed as a delta from
-// where it began rather than from the (already moving) preview.
-interface Grip {
-	block: Block;
-	start: Minutes;
-	end: Minutes;
-}
-
-export interface Gesture {
-	mode: GestureMode;
-	// Pointer offset (px from body top) where the gesture began.
-	originOffset: number;
-	// Blocks under manipulation with their ranges at gesture start. For `create`
-	// this is empty and the draft is derived from origin + current instead.
-	grips: Grip[];
-	geo: TimelineGeometry;
-}
+import { MIN_BLOCK_MINUTES, SNAP_MINUTES, clampToDay, offsetToMinutes, snap } from "./timeline-layout.util";
+import type { TimelineGeometry } from "./timeline-layout.interface";
+import type { Gesture, GestureMode, GesturePreview, Grip } from "./timeline-interactions.interface";
 
 /** Begin a move/resize gesture on one or more blocks. */
 export function beginBlockGesture(
@@ -66,18 +41,6 @@ export function beginCreateGesture(
 	geo: TimelineGeometry,
 ): Gesture {
 	return { mode: "create", originOffset, grips: [], geo };
-}
-
-/**
- * The live result of a gesture at the current pointer offset.
- *
- * `ranges` maps each gripped block to its previewed range (for move/resize).
- * `draft` is the sketched range of a create gesture, or undefined until the
- * drag has covered at least one snap step.
- */
-export interface GesturePreview {
-	ranges: Map<Block, TimeRange>;
-	draft?: TimeRange;
 }
 
 /** Compute the preview for a gesture given the current pointer offset. */

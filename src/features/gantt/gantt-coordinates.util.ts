@@ -11,6 +11,7 @@
 // so stepping is by whole units and the header can label real weeks/months.
 
 import type { ISODate } from "../../core/models/time.type";
+import type { CoarseTick, FineTick, HeaderModel, Interval } from "./gantt-coordinates.interface";
 
 export const ROW_HEIGHT = 34;
 export const ROW_GAP = 6;
@@ -47,8 +48,6 @@ export function rowTops(heights: readonly number[], start: number): number[] {
 	return tops;
 }
 
-// ── Interval presets ─────────────────────────────────────────────────────────
-export type Interval = "week" | "month" | "quarter" | "year";
 export const INTERVALS: readonly Interval[] = ["week", "month", "quarter", "year"];
 export const INTERVAL_LABEL: Record<Interval, string> = {
 	week: "Week",
@@ -389,30 +388,6 @@ export function getViewportWidth(
 //   month   → fine = each day,   coarse = weeks
 //   quarter → fine = weeks,      coarse = months
 //   year    → fine = months,     coarse = quarters
-
-export interface FineTick {
-	/** Centered label text. */
-	label: string;
-	/** Pixel x of the tick's left boundary (where the gridline is drawn). */
-	gridX: number;
-	/** Pixel x for the centered label. */
-	labelX: number;
-	/** The ISO date of this tick's left boundary (for date-on-line rendering). */
-	date: ISODate;
-}
-export interface CoarseTick {
-	label: string;
-	/** Pixel x of the group's left boundary. */
-	gridX: number;
-	/** Pixel x for the centered label. */
-	labelX: number;
-	/** Width of the group in pixels. */
-	width: number;
-}
-export interface HeaderModel {
-	fine: FineTick[];
-	coarse: CoarseTick[];
-}
 
 function fmtDay(date: ISODate): string {
 	return String(Number(date.slice(8, 10)));

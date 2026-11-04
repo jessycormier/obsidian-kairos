@@ -11,7 +11,7 @@
 
 	import type { Association } from "../../core/models/association.type";
 	import type { Task } from "../../core/models/task.interface";
-	import type { ResolvedAssociation } from "../associations/association.util";
+	import type { ResolvedAssociation } from "../associations/resolved-association.interface";
 	import TaskCheckbox from "../tasks/task-checkbox.component.svelte";
 	import AssocMeta from "../associations/association-meta.component.svelte";
 	import ItemRow from "../../shared/components/item-row.component.svelte";

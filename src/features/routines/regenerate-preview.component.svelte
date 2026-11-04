@@ -10,11 +10,13 @@
 	import type { Association } from "../../core/models/association.type";
 	import type { Block } from "../../core/models/block.interface";
 	import type { ResolvedTask } from "../../core/models/task.interface";
-	import type { Resolver } from "../../core/vault-index/kairos-index.service";
-	import type { KairosSettings } from "../settings/settings.tab";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
+	import type { KairosSettings } from "../settings/settings.interface";
 	import { formatTimeRange } from "../../core/note/note.parser";
-	import { applyRegenerate, type RegenChange } from "./regenerate-routines.util";
-	import { geometryFromSettings, gridHeight, layoutBlocks, type TimelineGeometry } from "../timeline/timeline-layout.util";
+	import { applyRegenerate } from "./regenerate-routines.util";
+	import type { RegenChange } from "./regenerate-routines.type";
+	import { geometryFromSettings, gridHeight, layoutBlocks } from "../timeline/timeline-layout.util";
+	import type { TimelineGeometry } from "../timeline/timeline-layout.interface";
 	import HourGutter from "../../shared/components/hour-gutter.component.svelte";
 	import HourLines from "../../shared/components/hour-lines.component.svelte";
 	import TimelineBlock from "../timeline/timeline-block.component.svelte";

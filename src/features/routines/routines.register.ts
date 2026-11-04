@@ -10,8 +10,10 @@ import type { Task } from "../../core/models/task.interface";
 import { KAIROS_ROUTINES_VIEW_TYPE, KairosRoutinesView } from "./routines.view";
 import { RuleModal } from "./rule.modal";
 import { blockRepeatDraft, repeatDraft, setRepeatHandler } from "./repeat-routine.util";
-import { addRoutine, type RoutineDraft } from "./routines.writer";
-import { parseRule, ruleSentence, type Rule } from "./recurrence-rules.util";
+import { addRoutine } from "./routines.writer";
+import type { RoutineDraft } from "./routines-writer.type";
+import { parseRule, ruleSentence } from "./recurrence-rules.util";
+import type { Rule } from "./recurrence-rules.type";
 
 export function registerRoutines(plugin: Kairos): void {
 	plugin.registerView(KAIROS_ROUTINES_VIEW_TYPE, (leaf) => new KairosRoutinesView(leaf, plugin));

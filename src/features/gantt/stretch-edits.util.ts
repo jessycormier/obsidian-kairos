@@ -19,15 +19,7 @@
 import type { StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { daysBetween, shiftDays } from "./gantt-coordinates.util";
-
-/** Which date a gesture changes: the opener's, the (exclusive) end, or the
- *  whole stretch, given as its new start. */
-export type StretchEditKind = "start" | "end" | "move";
-
-export interface Bounds {
-	min: ISODate | null;
-	max: ISODate | null;
-}
+import type { Bounds, StretchEditKind } from "./stretch-edits.interface";
 
 interface Located {
 	h: StatusRecord[];

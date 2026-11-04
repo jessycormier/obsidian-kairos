@@ -17,6 +17,7 @@
 //   as a right-click): press and hold means drag, and ⋯ is the menu.
 
 import { setIcon } from "obsidian";
+import type { TouchSelectOptions } from "./touch-select.interface";
 
 /** On the row while it is selected by touch; it also wakes the row's bar. */
 export const TOUCH_SELECTED_CLASS = "kairos-touch-selected";
@@ -40,17 +41,6 @@ interface Selection {
 	clear: () => void;
 }
 let current: Selection | null = null;
-
-export interface TouchSelectOptions {
-	/** The row's bar, looked up when needed (it may render conditionally). */
-	findBar: () => HTMLElement | null;
-	/** Whether `el` belongs to this row and not to a row nested inside it. */
-	ownsTarget: (el: Element) => boolean;
-	/** Class to put on the row while selected, so its bar shows. */
-	awakeClass: string;
-	/** The row has a right-click menu: add ⋯ to its bar. */
-	menu: () => boolean;
-}
 
 function isTouch(type: string): boolean {
 	return type === "touch" || type === "pen";

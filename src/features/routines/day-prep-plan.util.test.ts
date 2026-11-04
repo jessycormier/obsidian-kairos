@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { manualMessage, planDayPrep, type PrepInput } from "./day-prep-plan.util";
+import { manualMessage, planDayPrep } from "./day-prep-plan.util";
+import type { PrepInput } from "./day-prep-plan.interface";
 import { parseRoutines } from "./routines.file";
 import { routinesHash } from "./apply-routines.util";
 import { parseSchedule } from "../../core/note/note.parser";

@@ -7,24 +7,9 @@
 import { App, ButtonComponent, Modal } from "obsidian";
 import { mount, unmount } from "svelte";
 import type { Component } from "svelte";
-import type { Block } from "../../core/models/block.interface";
-import type { Resolver } from "../../core/vault-index/kairos-index.service";
-import type { KairosSettings } from "../settings/settings.tab";
 import RegeneratePreview from "./regenerate-preview.component.svelte";
-import { checkedByDefault, type RegenChange } from "./regenerate-routines.util";
-
-export interface RegenerateModalOptions {
-	/** The day, as the title names it: "Thu, Oct 29". */
-	label: string;
-	/** The day's blocks the changes were computed from. */
-	blocks: Block[];
-	changes: RegenChange[];
-	/** The day's note, for the blocks the preview adds. */
-	path: string;
-	resolve: Resolver;
-	settings: KairosSettings;
-	onApply: (keys: Set<string>) => void;
-}
+import { checkedByDefault } from "./regenerate-routines.util";
+import type { RegenerateModalOptions } from "./regenerate-modal.interface";
 
 export class RegenerateModal extends Modal {
 	private picked: Set<string>;

@@ -4,27 +4,13 @@
 // bottom. Mirrors the logic already used inline by AssociationPicker so every
 // floating popup dodges the "opens off-screen" bug the same way.
 
-export interface FloatRect {
-	left: number;
-	right: number;
-	top: number;
-	bottom: number;
-}
-
-export interface PlaceOptions {
-	/** Gap between the anchor and the panel, and the min viewport margin. */
-	margin?: number;
-	/** Panel width; used to clamp the left edge. */
-	width: number;
-	/** Panel height; used to decide whether to flip above the anchor. */
-	height: number;
-}
-
 /**
  * A `fixed`-positioning CSS string (`left/top`) placing a panel of the given
  * size just under `anchor`, flipped above it when it would overflow the bottom,
  * and clamped so it never leaves the viewport.
  */
+import type { FloatRect, PlaceOptions } from "./floating.interface";
+
 export function placeUnderAnchor(anchor: FloatRect, opts: PlaceOptions): string {
 	const margin = opts.margin ?? 6;
 

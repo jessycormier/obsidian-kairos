@@ -5,13 +5,13 @@
 	import { onMount } from "svelte";
 	import type { Readable, Unsubscriber } from "svelte/store";
 	import { resolveBlocks } from "../../core/note/task-resolver.util";
-	import type { KairosSettings } from "../settings/settings.tab";
+	import type { KairosSettings } from "../settings/settings.interface";
 	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 	import type { Block } from "../../core/models/block.interface";
 	import type { Day } from "../../core/models/day.interface";
 	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
 	import type { ISODate, TimeRange } from "../../core/models/time.type";
-	import type { Routine } from "../routines/routines.file";
+	import type { Routine } from "../routines/routines-file.interface";
 	import {
 		deleteBlock,
 		deleteBlocks,
@@ -22,7 +22,8 @@
 		setTaskStatus,
 		addTaskToUnscheduled,
 	} from "../../core/note/note.writer";
-	import { leftovers, type Leftover } from "../routines/carry-over.util";
+	import { leftovers } from "../routines/carry-over.util";
+	import type { Leftover } from "../routines/carry-over.interface";
 	import LeftoverBanner from "./leftover-banner.component.svelte";
 	import { leftOpenLabel } from "./today-leftovers.util";
 	import AssocGroup from "../associations/association-group.component.svelte";
@@ -36,8 +37,10 @@
 		setResurface,
 	} from "../backlog/backlog.writer";
 	import BacklogNudge from "../backlog/backlog-nudge.component.svelte";
-	import { blockOptions, type BlockOption } from "./block-options.util";
-	import { daySignature, type KairosIndex, type Resolver } from "../../core/vault-index/kairos-index.service";
+	import { blockOptions } from "./block-options.util";
+	import type { BlockOption } from "./block-options.interface";
+	import { daySignature, type KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import type { Association } from "../../core/models/association.type";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import {
@@ -53,7 +56,7 @@
 	import TaskRow from "../tasks/task.component.svelte";
 	import { commitNumber } from "./number-field.util";
 	import { requestRepeat } from "../routines/repeat-routine.util";
-	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.store";
+	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.interface";
 	import IconButton from "../../shared/components/icon-button.component.svelte";
 	import { showDayMenu } from "./day.menu";
 	import { routinesToOffer } from "../routines/routine-preview.util";
@@ -66,21 +69,22 @@
 	import Popover from "../../shared/components/popover.component.svelte";
 	import StepArrows from "../../shared/components/step-arrows.component.svelte";
 	import { placeUnderAnchor } from "../../shared/utils/floating.util";
-	import {
-		hitTestTimeline,
-		type TaskDragState,
-	} from "./task-drag.util";
-	import { startDragScroll, type DragScroll } from "../../shared/utils/drag-scroll.util";
-	import { newBlockLabel, type TimelineDrop } from "./task-drop.util";
+	import { hitTestTimeline } from "./task-drag.util";
+	import type { TaskDragState } from "./task-drag.interface";
+	import { startDragScroll } from "../../shared/utils/drag-scroll.util";
+	import type { DragScroll } from "../../shared/utils/drag-scroll.interface";
+	import { newBlockLabel } from "./task-drop.util";
+	import type { TimelineDrop } from "./task-drop.interface";
 	import { dropTaskOnTimeline, duplicateTask } from "./drop-task.util";
 	import { pressOnBlockChild, pressOnMoveGrip, startAfterHold } from "../../shared/actions/touch-hold.util";
-	import type { DragPreview, FocusRequest, HoverTarget, ViewLinks } from "./view-links.store";
+	import type { ViewLinks } from "./view-links.store";
+	import type { DragPreview, FocusRequest, HoverTarget } from "./view-links.interface";
 	import {
-		type Gesture,
 		beginBlockGesture,
 		beginCreateGesture,
 		updateGesture,
 	} from "./timeline-interactions.util";
+	import type { Gesture } from "./timeline-interactions.interface";
 	import {
 		geometryFromSettings,
 		gridHeight,

@@ -6,21 +6,10 @@
 // inactive. Archived items are omitted (spec §4.4: archived vanishes from
 // pickers but stays resolvable for history).
 
-import type { Association } from "../../core/models/association.type";
 import type { Domain } from "../../core/models/domain.interface";
-import type { LifecycleState, Project } from "../../core/models/project.interface";
+import type { Project } from "../../core/models/project.interface";
 import { effectiveStatus, projectStatusOn } from "../projects/project.file";
-
-/** One selectable row in the association picker. */
-export interface AssociationOption {
-	/** The association this row would apply. */
-	association: Association;
-	/** Canonical display name. */
-	name: string;
-	kind: "project" | "domain";
-	/** Current lifecycle state (latest status record; defaults to active). */
-	status: LifecycleState;
-}
+import type { AssociationOption } from "./association-options.interface";
 
 /**
  * Assemble picker options from the project/domain maps. Archived entries are

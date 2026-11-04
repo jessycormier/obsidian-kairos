@@ -16,7 +16,7 @@
 	import IconButton from "../../shared/components/icon-button.component.svelte";
 	import { icon as drawIcon } from "../../shared/actions/icon.action";
 	import type { Association } from "../../core/models/association.type";
-	import type { ResolvedAssociation } from "./association.util";
+	import type { ResolvedAssociation } from "./resolved-association.interface";
 
 	interface Props {
 		/** Undefined for the "No project" group, or a group that isn't one. */

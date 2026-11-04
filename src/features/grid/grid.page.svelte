@@ -17,13 +17,13 @@
 	import { Menu } from "obsidian";
 	import { onMount } from "svelte";
 	import type { Readable, Unsubscriber } from "svelte/store";
-	import type { KairosSettings } from "../settings/settings.tab";
+	import type { KairosSettings } from "../settings/settings.interface";
 	import type { Association } from "../../core/models/association.type";
 	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 	import type { Block } from "../../core/models/block.interface";
 	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
 	import type { ISODate } from "../../core/models/time.type";
-	import type { Routine } from "../routines/routines.file";
+	import type { Routine } from "../routines/routines-file.interface";
 	import {
 		addTaskToBlock,
 		addTaskToUnscheduled,
@@ -40,11 +40,16 @@
 		setTaskText,
 		unnestTask,
 	} from "../../core/note/note.writer";
-	import { blockOptions, type BlockOption } from "../timeline/block-options.util";
-	import type { GridDay, GridSnapshot, KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
-	import { startDragScroll, type DragScroll } from "../../shared/utils/drag-scroll.util";
-	import { hitTestGridCell, hitTestGridGroup, hitTestTimeline, type BlockDragState, type GridDropSlot, type GridGroupDrop, type TaskDragState } from "../timeline/task-drag.util";
-	import { newBlockLabel, type TimelineDrop } from "../timeline/task-drop.util";
+	import { blockOptions } from "../timeline/block-options.util";
+	import type { BlockOption } from "../timeline/block-options.interface";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { GridDay, GridSnapshot, Resolver } from "../../core/vault-index/vault-index.interface";
+	import { startDragScroll } from "../../shared/utils/drag-scroll.util";
+	import type { DragScroll } from "../../shared/utils/drag-scroll.interface";
+	import { hitTestGridCell, hitTestGridGroup, hitTestTimeline } from "../timeline/task-drag.util";
+	import type { BlockDragState, GridDropSlot, GridGroupDrop, TaskDragState } from "../timeline/task-drag.interface";
+	import { newBlockLabel } from "../timeline/task-drop.util";
+	import type { TimelineDrop } from "../timeline/task-drop.interface";
 	import { dropTaskOnTimeline, duplicateTask } from "../timeline/drop-task.util";
 	import { fitWindow, GRID_MIN_COLUMN_PX } from "../timeline/week-window.util";
 	import { swipeDays } from "../../shared/actions/swipe-days.action";
@@ -57,41 +62,14 @@
 		const v = viewEl ? parseFloat(getComputedStyle(viewEl).getPropertyValue("--kairos-row-label-width")) : NaN;
 		return Number.isFinite(v) ? v : 180;
 	}
-	import {
-		blockLit,
-		hoverBlockTarget,
-		hoverTaskTarget,
-		taskHighlight,
-		type Highlight,
-		type HoverTarget,
-		type ViewLinks,
-	} from "../timeline/view-links.store";
+	import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight, type ViewLinks } from "../timeline/view-links.store";
+	import type { Highlight, HoverTarget } from "../timeline/view-links.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
-	import {
-		blockGroups,
-		isUnscheduledBlock,
-		buildRows,
-		dayStatus,
-		intensityChange,
-		intensityOn,
-		intentionChange,
-		blockDropAssociation,
-		dropAssociation,
-		gridDropLine,
-		isNoOpGroupDrop,
-		sourceKey,
-		rolledUpProjectOf,
-		rolledUpProjects,
-		rowAssociation,
-		type BlockGroup,
-		type GridDragFrom,
-		type GridDropOver,
-		type GridRow,
-		type GroupKey,
-	} from "./grid.model";
+	import { blockGroups, isUnscheduledBlock, buildRows, dayStatus, intensityChange, intensityOn, intentionChange, blockDropAssociation, dropAssociation, gridDropLine, isNoOpGroupDrop, sourceKey, rolledUpProjectOf, rolledUpProjects, rowAssociation } from "./grid.model";
+	import type { BlockGroup, GridDragFrom, GridDropOver, GridRow, GroupKey } from "./grid.interface";
 	import { addChangeDomainItem, addRollupItem, submenuOf } from "../projects/project.menu";
-	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.store";
-	import type { Leftover } from "../routines/carry-over.util";
+	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.interface";
+	import type { Leftover } from "../routines/carry-over.interface";
 	import LeftoverTask from "../timeline/leftover-task.component.svelte";
 	import HeaderBadge from "../timeline/header-badge.component.svelte";
 	import IconButton from "../../shared/components/icon-button.component.svelte";
@@ -101,7 +79,8 @@
 	import TaskRow from "../tasks/task.component.svelte";
 	import { leftOpenLabel, todayLeftovers } from "../timeline/today-leftovers.util";
 	import LeftoverButtons from "../timeline/leftover-buttons.component.svelte";
-	import { routinesToOffer, type RoutineList } from "../routines/routine-preview.util";
+	import { routinesToOffer } from "../routines/routine-preview.util";
+	import type { RoutineList } from "../routines/routine-preview.interface";
 	import { dayLabel } from "../routines/day-prep-plan.util";
 	import RoutinesAlert from "../routines/routines-alert.component.svelte";
 	import { surfacedOn } from "../backlog/backlog.model";
@@ -122,7 +101,7 @@
 	import GridCell from "./grid-cell.component.svelte";
 	import CellMarks from "./cell-marks.component.svelte";
 	import RowLabel from "../../shared/components/row-label.component.svelte";
-	import type { RowLabelInfo } from "../../shared/components/row-label.util";
+	import type { RowLabelInfo } from "../../shared/components/row-label.interface";
 	import AssociationPicker from "../associations/association-picker.component.svelte";
 	import { createAssociation } from "../associations/create-association.util";
 	import BlockPicker from "../timeline/block-picker.component.svelte";

@@ -12,10 +12,8 @@
 	import { coarsePointer, placePanel, visibleArea } from "../../shared/actions/picker-place.util";
 	import { onMount, tick } from "svelte";
 	import Popover from "../../shared/components/popover.component.svelte";
-	import {
-		filterBlockOptions,
-		type BlockOption,
-	} from "./block-options.util";
+	import { filterBlockOptions } from "./block-options.util";
+	import type { BlockOption } from "./block-options.interface";
 	import Tag from "../../shared/components/tag.component.svelte";
 
 	// The panel is a Popover, portaled to the body like AssociationPicker's.

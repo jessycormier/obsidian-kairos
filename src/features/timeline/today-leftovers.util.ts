@@ -5,18 +5,12 @@
 // marks today's note.
 
 import { derived, type Readable } from "svelte/store";
-import { leftovers, type Leftover } from "../routines/carry-over.util";
+import { leftovers } from "../routines/carry-over.util";
 import { dateFromISO, shiftISO, todayISO } from "../../core/note/day-note.util";
 import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
-import type { LeftoverActions } from "../routines/routines-feed.store";
-import type { Day } from "../../core/models/day.interface";
+import type { LeftoverActions } from "../routines/routines-feed.interface";
 import type { ISODate } from "../../core/models/time.type";
-
-export interface TodayLeftovers {
-	today: ISODate;
-	from: Day;
-	items: Leftover[];
-}
+import type { TodayLeftovers } from "./today-leftovers.interface";
 
 export function todayLeftovers(
 	index: KairosIndex,

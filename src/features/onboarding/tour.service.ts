@@ -13,9 +13,9 @@ import { todayISO } from "../../core/note/day-note.util";
 import type { ISODate } from "../../core/models/time.type";
 import type Kairos from "../../main";
 import { intersect } from "./tour-placement.util";
-import type { Rect } from "./tour-placement.util";
+import type { Rect } from "./tour-placement.interface";
 import { TourPopover } from "./tour-popover.util";
-import type { PopoverAction } from "./tour-popover.util";
+import type { PopoverAction } from "./tour-popover.interface";
 import {
 	follow,
 	locate,
@@ -24,27 +24,16 @@ import {
 	summarizeDay,
 	track,
 } from "./tour-progress.util";
-import type { BlockSummary, TrackedBlock } from "./tour-progress.util";
+import type { BlockSummary } from "./tour-progress.interface";
 import { DOCS_URL, STEPS, isStepDone, resumeStep } from "./tour-steps.util";
-import type { AnchorKind, StepContext } from "./tour-steps.util";
+import type { AnchorKind, StepContext } from "./tour-steps.interface";
 import { WelcomeModal } from "./welcome.modal";
 import { ConfirmModal } from "../projects/projects.modal";
+import type { TourState } from "./tour.interface";
 
 /** Minutes after midnight as "09:30". */
 function hhmm(minutes: number): string {
 	return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-}
-
-/**
- * - `unseen`: a new install; the welcome opens with the first Kairos view.
- * - `announce`: an existing install from before the tour; it gets one notice.
- * - `active`: mid-tour, at `step`.
- * - `done` / `dismissed`: finished or declined; only the command starts it.
- */
-export interface TourState {
-	status: "unseen" | "announce" | "active" | "done" | "dismissed";
-	step: number;
-	block?: TrackedBlock;
 }
 
 export const NEW_TOUR: TourState = { status: "unseen", step: 0 };

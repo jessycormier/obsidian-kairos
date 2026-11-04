@@ -7,16 +7,7 @@
 import { Menu } from "obsidian";
 import type Kairos from "../main";
 import { activateRoutinesView } from "../features/routines/routines.register";
-
-/** One entry of the menu: the view's icon, its name, how to open it. */
-export interface KairosViewEntry {
-	/** Lucide icon name — the same icon the view returns from `getIcon()`. */
-	icon: string;
-	/** The view's name, matching its tab title. */
-	name: string;
-	/** Activate the view. */
-	open: () => void;
-}
+import type { KairosViewEntry } from "./view-menu.interface";
 
 /**
  * The views, in the order the ribbon used to list them, then Routines. Icons are kept in

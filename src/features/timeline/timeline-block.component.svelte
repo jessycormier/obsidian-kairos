@@ -5,14 +5,9 @@
   import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
   import type { TimeRange } from "../../core/models/time.type";
   import { formatTimeRange, parseTimeRangeText } from "../../core/note/note.parser";
-  import {
-    blockLit,
-    hoverBlockTarget,
-    hoverTaskTarget,
-    taskHighlight,
-    type HoverTarget,
-  } from "./view-links.store";
-  import type { Resolver } from "../../core/vault-index/kairos-index.service";
+  import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight } from "./view-links.store";
+  import type { HoverTarget } from "./view-links.interface";
+  import type { Resolver } from "../../core/vault-index/vault-index.interface";
   import { peek } from "../../shared/actions/peek.action";
   import { Menu, Notice } from "obsidian";
   import TaskComponent from "../tasks/task.component.svelte";

@@ -6,7 +6,8 @@
 	// empty cell of the same width that carries the rule up through the
 	// header row and rounds the strip's top-left corner.
 
-	import { gridHeight, minutesToOffset, visibleHours, type TimelineGeometry } from "../../features/timeline/timeline-layout.util";
+	import { gridHeight, minutesToOffset, visibleHours } from "../../features/timeline/timeline-layout.util";
+	import type { TimelineGeometry } from "../../features/timeline/timeline-layout.interface";
 
 	interface Props {
 		geo: TimelineGeometry;

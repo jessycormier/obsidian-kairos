@@ -21,39 +21,14 @@ import { derived, writable } from "svelte/store";
 import type { Readable } from "svelte/store";
 import { getAllDailyNotes, getDailyNote, getDateFromPath } from "obsidian-daily-notes-interface";
 import type Kairos from "../../main";
-import type { SourceRef } from "../../core/models/source-ref.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { ROUTINES_KEY } from "./apply-routines.util";
 import { CARRIED_KEY } from "./carry-over.util";
-import { ownerActive, type OwnerActive } from "./routine-owners.util";
-import type { ParsedRoutines, Routine } from "./routines.file";
+import { ownerActive } from "./routine-owners.util";
+import type { OwnerActive } from "./routine-owners.type";
+import type { ParsedRoutines } from "./routines-file.interface";
 import type { RoutinesStore } from "./routines.store";
-
-/** The recorded routines hash for a date, or undefined. */
-export type RoutineMarks = (date: ISODate) => string | undefined;
-
-/** What a view needs to show a day's routines alert and act on it. */
-export interface RoutineActions {
-	routines$: Readable<ParsedRoutines>;
-	marks$: Readable<RoutineMarks>;
-	active$: Readable<OwnerActive>;
-	/** Add one item (a block with its tasks, or a task); doesn't record the day. */
-	insert: (date: ISODate, routines: Routine[]) => void;
-	/** Add everything missing and record the day as set up. */
-	addAll: (date: ISODate) => void;
-	/** Preview how the day differs from its routines, and apply what's picked. */
-	regenerate: (date: ISODate) => void;
-}
-
-/** What the Day view needs to offer the previous day's leftovers and act on them. */
-export interface LeftoverActions {
-	/** The day a date's note says its leftovers came from, if they were dealt with. */
-	carried$: Readable<RoutineMarks>;
-	/** Bring the tasks at `which` (or every leftover) from `from` into `date`. */
-	bring: (date: ISODate, from: ISODate, which?: SourceRef[]) => void;
-	/** Leave the rest where they are and stop offering them on `date`. */
-	leave: (date: ISODate, from: ISODate) => void;
-}
+import type { LeftoverActions, RoutineActions, RoutineMarks } from "./routines-feed.interface";
 
 const DEBOUNCE_MS = 250;
 

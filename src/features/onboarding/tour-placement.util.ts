@@ -3,20 +3,7 @@
 // popover off the timeline the person is about to drag on. Pure, so it's tested
 // without a DOM.
 
-export interface Rect {
-	left: number;
-	top: number;
-	width: number;
-	height: number;
-}
-
-export type Side = "left" | "right" | "below" | "above" | "corner";
-
-export interface Placement {
-	left: number;
-	top: number;
-	side: Side;
-}
+import type { Placement, Rect } from "./tour-placement.interface";
 
 const clamp = (v: number, lo: number, hi: number) =>
 	Math.max(lo, Math.min(v, Math.max(lo, hi)));

@@ -6,24 +6,8 @@
 
 import { setIcon } from "obsidian";
 import { dockPopover, placePopover } from "./tour-placement.util";
-import type { Rect } from "./tour-placement.util";
-
-export interface PopoverAction {
-	label: string;
-	cta?: boolean;
-	onClick: () => void;
-}
-
-export interface PopoverContent {
-	/** "Step 2 of 6", or empty on the last step. */
-	progress: string;
-	title: string;
-	/** Copy with `**bold**` for literal UI labels. */
-	body: string;
-	link?: { text: string; href: string };
-	actions: PopoverAction[];
-	onClose: () => void;
-}
+import type { Rect } from "./tour-placement.interface";
+import type { PopoverContent } from "./tour-popover.interface";
 
 /** Append `text` to `el`, turning each `**label**` into a <strong>. */
 function renderInline(el: HTMLElement, text: string) {

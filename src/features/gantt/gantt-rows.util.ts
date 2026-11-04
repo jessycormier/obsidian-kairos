@@ -22,11 +22,11 @@
 //
 // Pure and vault-free, like the rest of src/gantt, so it runs under vitest.
 
-import type { Domain } from "../../core/models/domain.interface";
-import type { Project, StatusRecord } from "../../core/models/project.interface";
+import type { StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
-import type { ProjectsDomains } from "../../core/vault-index/kairos-index.service";
+import type { ProjectsDomains } from "../../core/vault-index/vault-index.interface";
 import { effectiveStatus } from "../projects/project.file";
+import type { VisibleEntities } from "./gantt-rows.interface";
 
 /**
  * Was the entity active on any day in `[start, end]` (inclusive)?
@@ -66,14 +66,6 @@ export function earnsRow(
 ): boolean {
 	if (effectiveStatus(history, today) !== "archived") return true;
 	return activeInWindow(history, start, end);
-}
-
-/** The feed, filtered to the rows worth drawing for the current viewport. */
-export interface VisibleEntities {
-	/** Domains that earn a header, each with its visible child projects. */
-	domains: { domain: Domain; projects: Project[] }[];
-	/** Visible projects filed under no domain. */
-	orphans: Project[];
 }
 
 /**

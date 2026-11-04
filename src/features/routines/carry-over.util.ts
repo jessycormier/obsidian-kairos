@@ -27,6 +27,7 @@ import type { Task, TaskStatus } from "../../core/models/task.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { copyTaskIntoDay, withoutTask } from "../../core/note/note.writer";
 import { nextDraftLine } from "../../core/note/draft-line.util";
+import type { CarryResult, Leftover } from "./carry-over.interface";
 
 /**
  * The frontmatter key recording that the leftovers from the named day were dealt
@@ -38,18 +39,6 @@ export const CARRIED_KEY = "kairos-carried";
 /** Open and half-done carry; done and cancelled don't. */
 export function carries(status: TaskStatus): boolean {
 	return status === " " || status === "/";
-}
-
-export interface CarryResult {
-	from: Block[];
-	to: Block[];
-	moved: number;
-}
-
-/** A task left open on an earlier day, with the block it sits in. */
-export interface Leftover {
-	owner: Block;
-	task: Task;
 }
 
 /**

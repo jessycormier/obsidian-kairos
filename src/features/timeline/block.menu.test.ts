@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Menu } from "obsidian";
-import { addBlockMenuItems, type BlockMenuActions } from "./block.menu";
+import { addBlockMenuItems } from "./block.menu";
+import type { BlockMenuActions } from "./block-menu.interface";
 import { setRepeatHandler } from "../routines/repeat-routine.util";
 import type { Block } from "../../core/models/block.interface";
 

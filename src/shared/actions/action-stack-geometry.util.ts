@@ -8,23 +8,6 @@
 // is no room above (top of the pane / of a scrolled list), it grows DOWN from
 // the corner instead.
 
-/** A screen rectangle (client coordinates). */
-export interface Box {
-	top: number;
-	right: number;
-	bottom: number;
-	left: number;
-}
-
-export type StackDirection = "up" | "down";
-
-export interface StackPlacement {
-	/** Client-coordinate left/top of the stack's border box. */
-	left: number;
-	top: number;
-	direction: StackDirection;
-}
-
 /**
  * Where to put a stack of `width` × `height` on `row`.
  *
@@ -37,6 +20,8 @@ export interface StackPlacement {
  *   Chosen when "up" doesn't fit and "down" does.
  * - Neither fits (a tiny pane): the side with more room.
  */
+import type { Box, StackInset, StackPlacement, StyleLike } from "./action-stack-geometry.interface";
+
 export function placeActionStack(
 	row: Pick<Box, "top" | "right">,
 	width: number,
@@ -53,12 +38,6 @@ export function placeActionStack(
 	return roomUp >= roomDown
 		? { left, top: upTop, direction: "up" }
 		: { left, top: downTop, direction: "down" };
-}
-
-/** How far in from the row's top-right corner the horizontal bar sat. */
-export interface StackInset {
-	top: number;
-	right: number;
 }
 
 /**
@@ -123,19 +102,6 @@ export function boxInside(inner: Box, outer: Box, slack = 0.5): boolean {
 		inner.right <= outer.right + slack
 	);
 }
-
-/** The computed-style properties the checks below read. */
-export type StyleLike = Pick<
-	CSSStyleDeclaration,
-	| "transform"
-	| "filter"
-	| "perspective"
-	| "contain"
-	| "willChange"
-	| "containerType"
-	| "overflowX"
-	| "overflowY"
-> & { backdropFilter?: string };
 
 function set(value: string | undefined): boolean {
 	return !!value && value !== "none" && value !== "normal" && value !== "auto";

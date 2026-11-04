@@ -29,7 +29,8 @@ import type { ISODate } from "../../core/models/time.type";
 import { nextDraftLine } from "../../core/note/draft-line.util";
 import { addTaskToUnscheduled } from "../../core/note/note.writer";
 import { occursOn } from "./recurrence-rules.util";
-import type { BlockRoutine, Routine, TaskRoutine } from "./routines.file";
+import type { BlockRoutine, Routine, TaskRoutine } from "./routines-file.interface";
+import type { ApplyResult } from "./apply-routines.interface";
 
 /** The frontmatter key holding the hash of the routines applied to a day. */
 export const ROUTINES_KEY = "kairos-routines";
@@ -37,12 +38,6 @@ export const ROUTINES_KEY = "kairos-routines";
 /** The routines that occur on `date`, in file order. */
 export function routinesFor(routines: Routine[], date: ISODate): Routine[] {
 	return routines.filter((r) => occursOn(r.rule, date));
-}
-
-export interface ApplyResult {
-	blocks: Block[];
-	/** How many blocks and tasks were added. */
-	added: number;
 }
 
 /** The routines in `due` that the day doesn't contain yet (by the rules above), in order. */

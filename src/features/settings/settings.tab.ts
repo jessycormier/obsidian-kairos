@@ -2,13 +2,9 @@ import { App, PluginSettingTab, Setting } from 'obsidian';
 import type { SettingDefinition, SettingDefinitionItem } from 'obsidian';
 import Kairos from '../../main';
 import { normalizeHeading } from '../../core/note/schedule-section.util';
-import {
-	SETTING_DEFINITIONS,
-	type KairosSettingKey,
-} from './settings.model';
+import { SETTING_DEFINITIONS } from './settings.model';
+import type { KairosSettingKey } from './settings.interface';
 
-export { DEFAULT_SETTINGS } from './settings.model';
-export type { KairosSettings } from './settings.model';
 
 /** What a settings control hands back: slider/text/toggle values. */
 type ControlValue = string | number | boolean;

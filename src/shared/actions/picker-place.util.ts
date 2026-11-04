@@ -3,12 +3,7 @@
 // screen that's visible. On iOS the keyboard covers the page without shrinking
 // `window.innerHeight`, so the visible part is the visual viewport.
 
-export interface Area {
-	top: number;
-	left: number;
-	width: number;
-	height: number;
-}
+import type { Area } from "./picker-place.interface";
 
 const MARGIN = 6;
 

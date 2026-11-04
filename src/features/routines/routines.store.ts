@@ -11,7 +11,8 @@
 import { Notice, TFile, normalizePath } from "obsidian";
 import { writable, type Readable } from "svelte/store";
 import type Kairos from "../../main";
-import { parseRoutines, type ParsedRoutines } from "./routines.file";
+import { parseRoutines } from "./routines.file";
+import type { ParsedRoutines } from "./routines-file.interface";
 import { RoutinesConflict } from "./routines.writer";
 
 const EMPTY: ParsedRoutines = { routines: [], problems: [] };

@@ -11,13 +11,8 @@ import type { Block } from "../../core/models/block.interface";
 import type { Task } from "../../core/models/task.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { ensureNoteForDate } from "../../core/note/day-note.util";
-import {
-	commitTaskDrop,
-	planTaskDrop,
-	type DayBlocks,
-	type DropModifiers,
-	type TimelineDrop,
-} from "./task-drop.util";
+import { commitTaskDrop, planTaskDrop } from "./task-drop.util";
+import type { DayBlocks, DropModifiers, TimelineDrop } from "./task-drop.interface";
 
 /** A day's blocks as the index holds them now, or null when it has no note. */
 function indexedDay(index: KairosIndex, date: ISODate): DayBlocks | null {

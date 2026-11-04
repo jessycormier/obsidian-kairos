@@ -10,18 +10,8 @@ vi.mock("obsidian-daily-notes-interface", () => ({
 	},
 }));
 
-import {
-	KairosIndex,
-	backlogSignature,
-	classify,
-	daySignature,
-	deriveLookups,
-	emptyState,
-	reindexDay,
-	removeDay,
-	type IndexDeps,
-	type IndexPaths,
-} from "./kairos-index.service";
+import { KairosIndex, backlogSignature, classify, daySignature, deriveLookups, emptyState, reindexDay, removeDay } from "./kairos-index.service";
+import type { IndexDeps, IndexPaths } from "./vault-index.interface";
 import { parseSchedule } from "../note/note.parser";
 import { serialize } from "../note/note.serializer";
 import { addTaskToUnscheduled, makeBlock } from "../note/note.writer";

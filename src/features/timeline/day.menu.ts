@@ -7,7 +7,7 @@
 import { Menu, TFile } from "obsidian";
 import type { App } from "obsidian";
 import type { ISODate } from "../../core/models/time.type";
-import type { RoutineActions } from "../routines/routines-feed.store";
+import type { RoutineActions } from "../routines/routines-feed.interface";
 import { ensureNoteForDate, todayISO } from "../../core/note/day-note.util";
 
 /** Add the day's items to `menu`. Past days keep their routines as they were. */

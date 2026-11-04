@@ -18,7 +18,8 @@
 	import type { Domain } from "../../core/models/domain.interface";
 	import type { LifecycleState, Project, StatusRecord } from "../../core/models/project.interface";
 	import type { ISODate } from "../../core/models/time.type";
-	import type { KairosIndex, ProjectsDomains } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { ProjectsDomains } from "../../core/vault-index/vault-index.interface";
 	import { dateFromISO, isoFromDate, todayISO } from "../../core/note/day-note.util";
 	import {
 		editDomainStatusRecord,
@@ -30,48 +31,12 @@
 		setProjectHistory,
 		setProjectStatus,
 	} from "../projects/project.writer";
-	import {
-		BAR_HEIGHT,
-		BAR_OFFSET,
-		HEADER_COARSE_HEIGHT,
-		HEADER_FINE_HEIGHT,
-		HEADER_HEIGHT,
-		INTERVALS,
-		INTERVAL_LABEL,
-		LABEL_PAD_Y,
-		ROW_GAP,
-		ROW_HEIGHT,
-		rowHeightFor,
-		rowTops,
-		dateToX,
-		getHeader,
-		daysBetween,
-		dragBounds,
-		dragPeriod,
-		shiftDays,
-		stepView,
-		SUB_UNIT,
-		unitRange,
-		viewLabel,
-		viewRange,
-		xToDate,
-		xToDay,
-		type Interval,
-	} from "./gantt-coordinates.util";
-	import { historyToSpans, type Span } from "./gantt-spans.util";
-	import {
-		applyStretchEdit,
-		archiveStop,
-		canRemoveEnd,
-		canSplitAt,
-		clampStretchEdit,
-		deleteStretch,
-		mergeableNext,
-		mergeWithNext,
-		removeEnd,
-		splitStretch,
-		type StretchEditKind,
-	} from "./stretch-edits.util";
+	import { BAR_HEIGHT, BAR_OFFSET, HEADER_COARSE_HEIGHT, HEADER_FINE_HEIGHT, HEADER_HEIGHT, INTERVALS, INTERVAL_LABEL, LABEL_PAD_Y, ROW_GAP, ROW_HEIGHT, rowHeightFor, rowTops, dateToX, getHeader, daysBetween, dragBounds, dragPeriod, shiftDays, stepView, SUB_UNIT, unitRange, viewLabel, viewRange, xToDate, xToDay } from "./gantt-coordinates.util";
+	import type { Interval } from "./gantt-coordinates.interface";
+	import { historyToSpans } from "./gantt-spans.util";
+	import type { Span } from "./gantt-spans.interface";
+	import { applyStretchEdit, archiveStop, canRemoveEnd, canSplitAt, clampStretchEdit, deleteStretch, mergeableNext, mergeWithNext, removeEnd, splitStretch } from "./stretch-edits.util";
+	import type { StretchEditKind } from "./stretch-edits.interface";
 	import { addIntensityItem } from "./intensity.menu";
 	import { visibleEntities } from "./gantt-rows.util";
 	import Datepicker from "../../shared/components/datepicker.component.svelte";
@@ -83,7 +48,8 @@
 	import IntensityBars from "../../shared/components/intensity-bars.component.svelte";
 	import { peek } from "../../shared/actions/peek.action";
 	import { intoViewHeader } from "../../shared/actions/view-header.action";
-	import { rowLabelInfo, type RowLabelInfo } from "../../shared/components/row-label.util";
+	import { rowLabelInfo } from "../../shared/components/row-label.util";
+	import type { RowLabelInfo } from "../../shared/components/row-label.interface";
 
 	interface Props {
 		index: KairosIndex;

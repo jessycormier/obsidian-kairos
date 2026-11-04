@@ -15,7 +15,6 @@
 import type { Association } from "../../core/models/association.type";
 import type { Block } from "../../core/models/block.interface";
 import type { Task } from "../../core/models/task.interface";
-import type { ISODate, TimeRange } from "../../core/models/time.type";
 import { nextDraftLine } from "../../core/note/draft-line.util";
 import {
 	copyTaskIntoBlock,
@@ -28,12 +27,7 @@ import {
 	scheduleTaskInNewBlock,
 	scheduleTaskInNewBlockAcrossDays,
 } from "../../core/note/note.writer";
-
-/** A drop position on a timeline, found by hit-testing its DOM. */
-export type TimelineDrop =
-	| { kind: "block"; date: ISODate; blockLine: number; index: number }
-	| { kind: "unscheduled"; date: ISODate }
-	| { kind: "time"; date: ISODate; time: TimeRange };
+import type { DayBlocks, DragSource, DropCommitter, DropModifiers, DropOutcome, TimelineDrop } from "./task-drop.interface";
 
 /** True when two drops name the same position (or are both absent). */
 export function sameDrop(a: TimelineDrop | null, b: TimelineDrop | null): boolean {
@@ -47,35 +41,6 @@ export function sameDrop(a: TimelineDrop | null, b: TimelineDrop | null): boolea
   }
   return a.kind === "unscheduled";
 }
-
-/** One day as the planner sees it. `path` is where its note lives (or will). */
-export interface DayBlocks {
-	date: ISODate;
-	path: string;
-	blocks: Block[];
-}
-
-/** The dragged task and the block it currently sits in, on `day`. */
-export interface DragSource {
-	day: DayBlocks;
-	owner: Block;
-	task: Task;
-}
-
-/** Modifier state at release. */
-export interface DropModifiers {
-	duplicate: boolean;
-	/**
-	 * The title a block made by a drop on empty time gets (a setting). Empty or
-	 * absent: the task's project or domain name.
-	 */
-	blockTitle?: string;
-}
-
-/** What to commit: one day rewritten, or a task moved between two days. */
-export type DropOutcome =
-	| { kind: "day"; day: DayBlocks }
-	| { kind: "cross"; from: DayBlocks; to: DayBlocks };
 
 /** True for the day's Unscheduled inbox (an untimed block by that name). */
 function isInbox(block: Block): boolean {
@@ -162,19 +127,6 @@ export function newBlockLabel(task: Task, owner: Block, mods: DropModifiers): st
 	if (title) return title;
 	const assoc = task.assoc ?? owner.assoc;
 	return assoc ? assoc.id : "New block";
-}
-
-/** The commit side the index offers; narrowed so the planner's callers can share one. */
-export interface DropCommitter {
-	applyDayEdit(date: ISODate, path: string, blocks: Block[]): void;
-	applyCrossDayMove(
-		fromDate: ISODate,
-		fromPath: string,
-		fromBlocks: Block[],
-		toDate: ISODate,
-		toPath: string,
-		toBlocks: Block[],
-	): void;
 }
 
 /** Commit a planned drop through the index. */

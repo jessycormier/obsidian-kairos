@@ -1,8 +1,9 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Readable, Writable } from 'svelte/store';
-import { DEFAULT_SETTINGS, KairosSettingTab } from './features/settings/settings.tab';
-import type { KairosSettings } from './features/settings/settings.tab';
+import { KairosSettingTab } from './features/settings/settings.tab';
+import { DEFAULT_SETTINGS } from './features/settings/settings.model';
+import type { KairosSettings } from './features/settings/settings.interface';
 import type { ISODate } from './core/models/time.type';
 import { KAIROS_VIEW_TYPE, KairosView } from './features/timeline/day.view';
 import { KAIROS_WEEK_VIEW_TYPE, KairosWeekView } from './features/timeline/week.view';
@@ -24,33 +25,8 @@ import { registerRoutines } from './features/routines/routines.register';
 import { RoutinesFeed } from './features/routines/routines-feed.store';
 import { ViewLinks } from './features/timeline/view-links.store';
 import { NEW_TOUR, Tour } from './features/onboarding/tour.service';
-import type { TourState } from './features/onboarding/tour.service';
-
-/**
- * A request to reveal a specific block in the Day view. Pushed by the Grid view
- * when a scheduled task's block badge is clicked; consumed by the Day view,
- * which navigates to `date` and scrolls the block (identified by its source
- * `line`) into view. `nonce` makes two requests for the same target distinct,
- * so a repeat click still notifies subscribers.
- */
-export interface RevealRequest {
-	date: ISODate;
-	blockLine: number;
-	nonce: number;
-}
-
-/**
- * A filtered-backlog request from the Projects & Domains page. `names` is the
- * allow-list of association names an entry may carry to be shown (the domain
- * plus its child projects for a domain button; just the project for a project
- * button — spec §5, settled rule). `label` names the filter for the header
- * ("Health", "Learn Spanish"). `nonce` makes repeat clicks distinct.
- */
-export interface BacklogFilter {
-	names: string[];
-	label: string;
-	nonce: number;
-}
+import type { TourState } from './features/onboarding/tour.interface';
+import type { BacklogFilter, RevealRequest } from './core/plugin-requests.interface';
 
 export default class Kairos extends Plugin {
 	/**

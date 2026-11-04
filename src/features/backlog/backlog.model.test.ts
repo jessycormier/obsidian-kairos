@@ -7,7 +7,7 @@ import {
 	surfacedOn,
 } from "./backlog.model";
 import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
-import type { Resolver } from "../../core/vault-index/kairos-index.service";
+import type { Resolver } from "../../core/vault-index/vault-index.interface";
 
 const P = "Backlog.md";
 let line = 0;

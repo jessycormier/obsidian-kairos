@@ -15,18 +15,7 @@
 import type { Association } from "../../core/models/association.type";
 import type { Domain } from "../../core/models/domain.interface";
 import type { Project } from "../../core/models/project.interface";
-
-/** A resolved association ready for rendering and navigation. */
-export interface ResolvedAssociation {
-	/** The current canonical name to display (never an alias). */
-	displayName: string;
-	/** Domain color, if one applies (directly or via the project's domain). */
-	color?: string;
-	/** The file path to open on ctrl-click, or undefined when it doesn't resolve. */
-	target?: string;
-	/** Whether the underlying project/domain file actually exists. */
-	resolved: boolean;
-}
+import type { ResolvedAssociation } from "./resolved-association.interface";
 
 /**
  * Look up a project/domain by exact name, falling back to an alias match. The

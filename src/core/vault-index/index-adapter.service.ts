@@ -13,7 +13,7 @@
 import { TFile } from "obsidian";
 import type { App, EventRef } from "obsidian";
 import { KairosIndex } from "./kairos-index.service";
-import type { IndexDeps, IndexPaths } from "./kairos-index.service";
+import type { IndexDeps, IndexPaths } from "./vault-index.interface";
 import { isFixable, needsNormalizing } from "../../features/projects/project.file";
 import type { Domain } from "../models/domain.interface";
 import type { Project } from "../models/project.interface";

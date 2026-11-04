@@ -16,10 +16,9 @@
 // occur that month. Pure and vault-free.
 
 import type { ISODate } from "../../core/models/time.type";
+import type { Rule } from "./recurrence-rules.type";
 
-export type Rule =
-	| { kind: "weekly"; days: number[] } // 0 = Sunday … 6 = Saturday, sorted
-	| { kind: "monthly"; day: number }; // 1–31
+ // 1–31
 
 const DAY_NAMES: Record<string, number> = {
 	sun: 0, sunday: 0,

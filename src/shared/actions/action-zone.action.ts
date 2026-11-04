@@ -39,7 +39,8 @@
 
 import { ActionStack } from "./action-stack.class";
 import { touchSelect } from "./touch-select.action";
-import { cornerNearness, inActionZone, type ActionZoneAnchor } from "./action-zone-geometry.util";
+import { cornerNearness, inActionZone } from "./action-zone-geometry.util";
+import type { ActionZoneOptions } from "./action-zone.interface";
 
 /** Class on the row while its action bar is awake (mouse in the zone). */
 export const ACTIONS_AWAKE_CLASS = "kairos-actions-awake";
@@ -71,25 +72,6 @@ const ZONE_ATTR = "data-kairos-action-zone";
 const STACK_GRACE_MS = 120;
 /** Stack layout: wait for the fade-out before un-portaling (styles.css 0.1s). */
 const STACK_FADE_MS = 150;
-
-export interface ActionZoneOptions {
-	/** Where the bar sits on the row (default "top-right"). */
-	anchor?: ActionZoneAnchor;
-	/** Share of the row's width the zone reaches along its widest line. */
-	fraction?: number;
-	/**
-	 * "bar" (default): the bar's own CSS lays it out. "stack" (EXPERIMENT): a
-	 * vertical stack, one button wide, whose first button by CSS `order` sits in
-	 * the row's top-right corner and the rest rise above it (or hang below when
-	 * there's no room above). Mouse wakes only; touch keeps the bar's CSS.
-	 */
-	layout?: "bar" | "stack";
-	/**
-	 * The row has a right-click menu. On touch, its selected bar gets a ⋯ that
-	 * opens it (touch-select.action.ts).
-	 */
-	menu?: boolean;
-}
 
 export function actionZone(host: HTMLElement, options: ActionZoneOptions = {}) {
 	let opts = options;

@@ -17,8 +17,8 @@
 	import type { Snippet } from "svelte";
 	import type { Association } from "../../core/models/association.type";
 	import type { Task, TaskStatus } from "../../core/models/task.interface";
-	import type { Highlight } from "../timeline/view-links.store";
-	import type { ResolvedAssociation } from "../associations/association.util";
+	import type { Highlight } from "../timeline/view-links.interface";
+	import type { ResolvedAssociation } from "../associations/resolved-association.interface";
 	import { tooltip } from "../../shared/actions/tooltip.action";
 	import TaskCheckbox from "./task-checkbox.component.svelte";
 	import AssocMeta from "../associations/association-meta.component.svelte";

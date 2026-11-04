@@ -22,7 +22,8 @@
 	// styles what it puts in them.
 
 	import type { Snippet } from "svelte";
-	import { actionZone, type ActionZoneOptions } from "../actions/action-zone.action";
+	import { actionZone } from "../actions/action-zone.action";
+	import type { ActionZoneOptions } from "../actions/action-zone.interface";
 	import { icon as drawIcon } from "../actions/icon.action";
 
 	interface Props {

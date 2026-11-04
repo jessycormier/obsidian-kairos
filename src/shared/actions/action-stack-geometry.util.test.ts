@@ -1,16 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-	boxInside,
-	clipsDescendants,
-	formsFixedContainingBlock,
-	intersectBoxes,
-	placeActionStack,
-	scrolls,
-	stackCorner,
-	stackSteps,
-	tooltipSide,
-	type StyleLike,
-} from "./action-stack-geometry.util";
+import { boxInside, clipsDescendants, formsFixedContainingBlock, intersectBoxes, placeActionStack, scrolls, stackCorner, stackSteps, tooltipSide } from "./action-stack-geometry.util";
+import type { StyleLike } from "./action-stack-geometry.interface";
 
 // A row at top 200, right edge 700; a 3-button stack 24 wide × 70 tall.
 const row = { top: 200, right: 700 };

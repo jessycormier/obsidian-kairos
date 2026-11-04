@@ -12,19 +12,19 @@
 	import { addTaskToUnscheduled, deleteBlock, deleteBlocks, makeBlock, nestTaskUnderBlock, notesWithAdded, notesWithText } from "../../core/note/note.writer";
 	import { moveTaskToBacklog } from "../backlog/backlog.writer";
 	import { formatTimeRange } from "../../core/note/note.parser";
-	import { daySignature, type KairosIndex, type Resolver } from "../../core/vault-index/kairos-index.service";
+	import { daySignature, type KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
-	import {
-		hitTestTimeline,
-		type IncomingBlock,
-		type TaskDragState,
-		type UnscheduledItem,
-	} from "./task-drag.util";
-	import { startDragScroll, type DragScroll } from "../../shared/utils/drag-scroll.util";
-	import { newBlockLabel, type TimelineDrop } from "./task-drop.util";
+	import { hitTestTimeline } from "./task-drag.util";
+	import type { IncomingBlock, TaskDragState, UnscheduledItem } from "./task-drag.interface";
+	import { startDragScroll } from "../../shared/utils/drag-scroll.util";
+	import type { DragScroll } from "../../shared/utils/drag-scroll.interface";
+	import { newBlockLabel } from "./task-drop.util";
+	import type { TimelineDrop } from "./task-drop.interface";
 	import { dropTaskOnTimeline, duplicateTask } from "./drop-task.util";
 	import { pressOnBlockChild, pressOnMoveGrip, startAfterHold } from "../../shared/actions/touch-hold.util";
-	import type { DragPreview, HoverTarget, ViewLinks } from "./view-links.store";
+	import type { ViewLinks } from "./view-links.store";
+	import type { DragPreview, HoverTarget } from "./view-links.interface";
 	import {
 		dateFromISO,
 		ensureNoteForDate,
@@ -36,17 +36,13 @@
 	import TaskRow from "../tasks/task.component.svelte";
 	import { requestRepeat } from "../routines/repeat-routine.util";
 	import {
-		type Gesture,
 		beginBlockGesture,
 		beginCreateGesture,
 		updateGesture,
 	} from "./timeline-interactions.util";
-	import {
-		type TimelineGeometry,
-		gridHeight,
-		layoutBlocks,
-		minutesToOffset,
-	} from "./timeline-layout.util";
+	import type { Gesture } from "./timeline-interactions.interface";
+	import { gridHeight, layoutBlocks, minutesToOffset } from "./timeline-layout.util";
+	import type { TimelineGeometry } from "./timeline-layout.interface";
 
 	// A single day's timeline column. Owns everything vertical for its date:
 	// the day-store subscription, in-place write-back, and move/resize/create

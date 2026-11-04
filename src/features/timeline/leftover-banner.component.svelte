@@ -5,8 +5,8 @@
 	// brings it to today); the header brings all or leaves the rest. Purely
 	// presentational: the view owns every write.
 
-	import type { Leftover } from "../routines/carry-over.util";
-	import type { Resolver } from "../../core/vault-index/kairos-index.service";
+	import type { Leftover } from "../routines/carry-over.interface";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import LeftoverTask from "./leftover-task.component.svelte";
 	import LeftoverButtons from "./leftover-buttons.component.svelte";
 

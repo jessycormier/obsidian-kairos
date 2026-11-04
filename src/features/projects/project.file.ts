@@ -24,6 +24,7 @@ import type { Domain } from "../../core/models/domain.interface";
 import type { LifecycleState, Project, StatusAnomaly, StatusRecord } from "../../core/models/project.interface";
 import type { SourceRef } from "../../core/models/source-ref.interface";
 import type { ISODate } from "../../core/models/time.type";
+import type { StatusEdit } from "./project-file.interface";
 
 const PROJECT_TAG = "kairos/project";
 const DOMAIN_TAG = "kairos/domain";
@@ -735,15 +736,6 @@ export function appendActivePeriod<T extends Project | Domain>(
 	const withActive = appendStatus(entity, start, "active", note);
 	const closed = entity.history.some((r) => r.date > start && r.date <= end);
 	return closed ? withActive : appendStatus(withActive, end, "inactive");
-}
-
-/** The replacement `editStatusRecord` takes; see there for which keys preserve. */
-export interface StatusEdit {
-	date: ISODate;
-	status: LifecycleState;
-	note?: string;
-	why?: string;
-	intensity?: number;
 }
 
 /**

@@ -16,20 +16,16 @@
 	import type { App } from "obsidian";
 	import { onMount } from "svelte";
 	import type { Readable, Unsubscriber } from "svelte/store";
-	import type { KairosSettings } from "../settings/settings.tab";
+	import type { KairosSettings } from "../settings/settings.interface";
 	import type { Association } from "../../core/models/association.type";
 	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 	import type { ISODate } from "../../core/models/time.type";
-	import type { KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { tooltip } from "../../shared/actions/tooltip.action";
-	import {
-		filterBySchedule,
-		groupBacklog,
-		type BacklogGroup,
-		type BacklogSchedule,
-		type BacklogSort,
-	} from "./backlog.model";
+	import { filterBySchedule, groupBacklog } from "./backlog.model";
+	import type { BacklogGroup, BacklogSchedule, BacklogSort } from "./backlog.interface";
 	import { dateFromISO, isoFromDate, todayISO } from "../../core/note/day-note.util";
 	import { nextDraftLine } from "../../core/note/draft-line.util";
 	import AssociationPicker from "../associations/association-picker.component.svelte";

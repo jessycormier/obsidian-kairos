@@ -15,15 +15,12 @@
 
 import { resolveAssociation } from "../associations/association.util";
 import { effectiveStatus, projectStatusOn } from "../projects/project.file";
-import type { Association } from "../../core/models/association.type";
 import type { Domain } from "../../core/models/domain.interface";
 import type { Project } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { routineAssoc } from "./apply-routines.util";
-import type { Routine } from "./routines.file";
-
-/** Whether an owner is active on a date. */
-export type OwnerActive = (assoc: Association, date: ISODate) => boolean;
+import type { Routine } from "./routines-file.interface";
+import type { OwnerActive } from "./routine-owners.type";
 
 /** Build an `OwnerActive` from the index's project and domain maps (keyed by name). */
 export function ownerActive(

@@ -4,7 +4,7 @@ import type { Component } from "svelte";
 import GridView from "./grid.page.svelte";
 import type Kairos from "../../main";
 import { findViewHeader } from "../../shared/actions/view-header.action";
-import type { KairosSettings } from "../settings/settings.tab";
+import type { KairosSettings } from "../settings/settings.interface";
 
 export const KAIROS_GRID_VIEW_TYPE = "kairos-grid-view";
 

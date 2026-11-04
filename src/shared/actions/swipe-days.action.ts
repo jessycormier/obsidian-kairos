@@ -13,6 +13,8 @@
 // node: the days move, and the sidebar stays shut. A touch from the edges
 // still reaches Obsidian.
 
+import type { SwipeDaysOptions } from "./swipe-days.interface";
+
 const MIN_DISTANCE_PX = 48;
 /** Sideways travel must be at least this many times the vertical travel. */
 const MIN_RATIO = 2;
@@ -21,13 +23,6 @@ const MAX_DURATION_MS = 600;
 const EDGE_PX = 24;
 /** Sideways travel past which a touch is taken for a swipe of ours. */
 const CLAIM_PX = 12;
-
-export interface SwipeDaysOptions {
-	/** Move by `days` (+1 later, −1 earlier). */
-	onSwipe: (days: number) => void;
-	/** Whether a drag is live, so this touch isn't a swipe. */
-	busy?: () => boolean;
-}
 
 export function swipeDays(node: HTMLElement, options: SwipeDaysOptions) {
 	let opts = options;

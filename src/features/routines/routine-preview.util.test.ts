@@ -7,7 +7,8 @@ import {
 	showsPreviews,
 } from "./routine-preview.util";
 import { applyRoutines, routinesHash } from "./apply-routines.util";
-import { parseRoutines, type Routine } from "./routines.file";
+import { parseRoutines } from "./routines.file";
+import type { Routine } from "./routines-file.interface";
 import { parseSchedule } from "../../core/note/note.parser";
 
 // 2026-10-07 Wed · 10-08 Thu · 10-12 Mon.

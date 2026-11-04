@@ -21,18 +21,9 @@
 // itself, so those buttons stay reachable.
 
 /** Share of the row's width, from the right edge, along the triangle's widest line. */
+import type { ActionZoneAnchor, ZoneRect } from "./action-zone-geometry.interface";
+
 export const ACTION_EDGE_FRACTION = 0.2;
-
-/** Where the bar sits on the row, and so where the triangle is widest. */
-export type ActionZoneAnchor = "top-right" | "right";
-
-/** The parts of a DOMRect the geometry needs. */
-export interface ZoneRect {
-	top: number;
-	right: number;
-	width: number;
-	height: number;
-}
 
 /** Length (px) of the triangle's widest line for a row of `rowWidth` and a bar of `barWidth`. */
 export function actionZoneWidth(

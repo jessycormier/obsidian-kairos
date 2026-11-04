@@ -1,15 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-	scheduleInNewBlock,
-	RoutinesConflict,
-	addRoutine,
-	draftOf,
-	removeRoutine,
-	updateRoutine,
-	type RoutineDraft,
-} from "./routines.writer";
-import { parseRoutines, type Routine } from "./routines.file";
-import { compareRules, parseRule, ruleText, type Rule } from "./recurrence-rules.util";
+import { scheduleInNewBlock, RoutinesConflict, addRoutine, draftOf, removeRoutine, updateRoutine } from "./routines.writer";
+import type { RoutineDraft } from "./routines-writer.type";
+import { parseRoutines } from "./routines.file";
+import type { Routine } from "./routines-file.interface";
+import { compareRules, parseRule, ruleText } from "./recurrence-rules.util";
+import type { Rule } from "./recurrence-rules.type";
 
 const FILE = `---
 tags: [kairos]

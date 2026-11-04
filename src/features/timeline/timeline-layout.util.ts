@@ -2,16 +2,10 @@
 // in the Day view. Kept as plain data + pure functions so the layout math is
 // unit-testable and free of Svelte.
 
-import type { KairosSettings } from "../settings/settings.tab";
+import type { KairosSettings } from "../settings/settings.interface";
 import type { Block } from "../../core/models/block.interface";
 import type { Minutes } from "../../core/models/time.type";
-
-export interface TimelineGeometry {
-	startHour: number; // first hour shown in the gutter
-	endHour: number; // last hour shown (exclusive of its label row)
-	hourHeight: number; // pixels per hour
-	topPad: number; // padding above the first hour line
-}
+import type { Placement, TimelineGeometry } from "./timeline-layout.interface";
 
 const TOP_PAD = 8;
 
@@ -105,15 +99,6 @@ export function dropRange(
 	const span = Math.min(length, dayEnd - dayStart);
 	const start = clamp(snap(minutes), dayStart, dayEnd - span);
 	return { start, end: start + span };
-}
-
-/** A block's placement rectangle in the timeline body. */
-export interface Placement {
-	block: Block;
-	top: number;
-	height: number;
-	column: number; // horizontal lane for overlap handling
-	lanes: number; // total lanes in this block's overlap cluster
 }
 
 // Lay out timed blocks, giving overlapping blocks side-by-side lanes so none is

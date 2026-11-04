@@ -19,7 +19,7 @@
 	import { Menu } from "obsidian";
 	import type { Association } from "../../core/models/association.type";
 	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
-	import type { ResolvedAssociation } from "../associations/association.util";
+	import type { ResolvedAssociation } from "../associations/resolved-association.interface";
 	import { tooltip } from "../../shared/actions/tooltip.action";
 	import AssocMeta from "../associations/association-meta.component.svelte";
 	import ItemRow from "../../shared/components/item-row.component.svelte";

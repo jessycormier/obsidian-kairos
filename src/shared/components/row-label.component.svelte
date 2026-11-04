@@ -10,7 +10,7 @@
 	// accent stripe is drawn by the parent (it spans multiple rows), not here.
 
 	import { formatShortDate } from "../../core/note/day-note.util";
-	import type { RowLabelInfo } from "./row-label.util";
+	import type { RowLabelInfo } from "./row-label.interface";
 	import HoverCard from "./hover-card.component.svelte";
 	import IntensityBars from "./intensity-bars.component.svelte";
 	import { icon } from "../actions/icon.action";

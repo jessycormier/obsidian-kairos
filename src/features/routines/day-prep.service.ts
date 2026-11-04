@@ -39,9 +39,12 @@ import { ROUTINES_KEY, applyRoutines, routinesFor, routinesHash, routinesStale }
 import { applyRegenerate, regenerateChanges } from "./regenerate-routines.util";
 import { RegenerateModal } from "./regenerate.modal";
 import { get } from "svelte/store";
-import { activeRoutines, ownerActive, type OwnerActive } from "./routine-owners.util";
-import { parseRoutines, type ParsedRoutines, type Routine } from "./routines.file";
-import { dayLabel as label, manualMessage, planDayPrep, type PrepMode, type PrepPlan } from "./day-prep-plan.util";
+import { activeRoutines, ownerActive } from "./routine-owners.util";
+import type { OwnerActive } from "./routine-owners.type";
+import { parseRoutines } from "./routines.file";
+import type { ParsedRoutines, Routine } from "./routines-file.interface";
+import { dayLabel as label, manualMessage, planDayPrep } from "./day-prep-plan.util";
+import type { PrepMode, PrepPlan } from "./day-prep-plan.interface";
 
 /** How long to let a template or sync finish writing a new note. */
 const SETTLE_MS = 1500;

@@ -18,7 +18,7 @@ import {
 	rolledUpProjectOf,
 	rowAssociation,
 } from "./grid.model";
-import type { GridDay, GridSnapshot } from "../../core/vault-index/kairos-index.service";
+import type { GridDay, GridSnapshot } from "../../core/vault-index/vault-index.interface";
 import type { Association } from "../../core/models/association.type";
 import type { Domain } from "../../core/models/domain.interface";
 import type { Project } from "../../core/models/project.interface";

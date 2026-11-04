@@ -3,16 +3,8 @@
 // so a row no longer repeats its association on a line of its own.
 
 import type { Association } from "../../core/models/association.type";
-import type { ResolvedAssociation } from "../associations/association.util";
-
-export interface AssocGroup<T> {
-	/** Stable key: the resolved note path, else kind + raw id; "" for none. */
-	key: string;
-	/** Undefined for the trailing group of items with no association. */
-	assoc?: Association;
-	resolved?: ResolvedAssociation;
-	items: T[];
-}
+import type { ResolvedAssociation } from "../associations/resolved-association.interface";
+import type { AssocGroup } from "./group-by-association.interface";
 
 /**
  * Groups `items` by association, in the order each association first appears,

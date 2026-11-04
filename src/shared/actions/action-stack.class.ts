@@ -31,21 +31,9 @@
 //    moving a focused element blurs it, and a stack at the end of the body
 //    would break tab order.
 
-import {
-	boxInside,
-	clipsDescendants,
-	formsFixedContainingBlock,
-	intersectBoxes,
-	placeActionStack,
-	scrolls,
-	stackCorner,
-	stackSteps,
-	tooltipSide,
-	type Box,
-	type StackInset,
-	type StackPlacement,
-} from "./action-stack-geometry.util";
-import type { ActionZoneAnchor } from "./action-zone-geometry.util";
+import { boxInside, clipsDescendants, formsFixedContainingBlock, intersectBoxes, placeActionStack, scrolls, stackCorner, stackSteps, tooltipSide } from "./action-stack-geometry.util";
+import type { Box, StackInset, StackPlacement } from "./action-stack-geometry.interface";
+import type { ActionZoneAnchor } from "./action-zone-geometry.interface";
 import { setStackOwner } from "./stack-owner.util";
 
 /** On the bar once the stack has been placed (styling hook for button order). */

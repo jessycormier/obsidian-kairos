@@ -15,12 +15,8 @@
 	import { onMount, tick } from "svelte";
 	import Popover from "../../shared/components/popover.component.svelte";
 	import type { Association } from "../../core/models/association.type";
-	import {
-		filterOptions,
-		newNameProblem,
-		offersCreate,
-		type AssociationOption,
-	} from "./association-options.util";
+	import { filterOptions, newNameProblem, offersCreate } from "./association-options.util";
+	import type { AssociationOption } from "./association-options.interface";
 	import Tag from "../../shared/components/tag.component.svelte";
 
 	// The panel is a Popover, portaled to the body: Obsidian leaf containers

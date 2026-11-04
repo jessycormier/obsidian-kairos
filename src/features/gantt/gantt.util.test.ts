@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Domain } from "../../core/models/domain.interface";
 import type { Project, StatusRecord } from "../../core/models/project.interface";
-import type { ProjectsDomains } from "../../core/vault-index/kairos-index.service";
+import type { ProjectsDomains } from "../../core/vault-index/vault-index.interface";
 import { appendActivePeriod, appendStatus, effectiveStatus } from "../projects/project.file";
 import { historyToSpans } from "./gantt-spans.util";
 import { activeInWindow, visibleEntities } from "./gantt-rows.util";

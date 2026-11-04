@@ -17,6 +17,8 @@
 // Grid scroll areas), whichever the pointer is over, so a drag that began in
 // one view scrolls another view it's carried into.
 
+import type { DragScroll } from "./drag-scroll.interface";
+
 export const DRAG_SCROLL_SELECTOR = "[data-drag-scroll]";
 
 // The band along an edge where scrolling starts, and the speed at the edge
@@ -56,13 +58,6 @@ function areaAt(doc: Document, x: number, y: number): HTMLElement | null {
 		if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return el;
 	}
 	return null;
-}
-
-export interface DragScroll {
-	/** The pointer moved: remember where, for the edge check and re-hit-tests. */
-	update(event: PointerEvent): void;
-	/** The drag ended: stop scrolling and stop listening. */
-	stop(): void;
 }
 
 /**

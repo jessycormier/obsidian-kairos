@@ -22,8 +22,10 @@
 import type { Block } from "../../core/models/block.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { missingFrom, routinesFor, routinesHash } from "./apply-routines.util";
-import { activeRoutines, type OwnerActive } from "./routine-owners.util";
-import type { BlockRoutine, Routine, TaskRoutine } from "./routines.file";
+import { activeRoutines } from "./routine-owners.util";
+import type { OwnerActive } from "./routine-owners.type";
+import type { BlockRoutine, Routine, TaskRoutine } from "./routines-file.interface";
+import type { PreviewDay, RoutineItem, RoutineList } from "./routine-preview.interface";
 
 /** Routines due on `date` that the day doesn't contain yet, in file order. */
 export function missingRoutines(
@@ -32,14 +34,6 @@ export function missingRoutines(
 	date: ISODate,
 ): Routine[] {
 	return missingFrom(blocks, routinesFor(routines, date));
-}
-
-export interface PreviewDay {
-	date: ISODate;
-	today: ISODate;
-	/** The day's `kairos-routines` value, if its note has one. */
-	recorded?: string;
-	routines: Routine[];
 }
 
 /** Whether a day should show routine previews at all (see the table above). */
@@ -60,31 +54,6 @@ export function routinesToOffer(
 ): RoutineList {
 	const routines = activeRoutines(day.routines, day.date, day.active);
 	return listRoutines(previewRoutines({ ...day, routines }));
-}
-
-/**
- * One line of a day's routines list, and what adding it writes. A block routine
- * comes with the task routines homed in it, and is added as a whole: routines
- * go in together, not task by task. A task routine whose block is already in
- * the day (or that names a home with no routine of its own) is its own item.
- */
-export interface RoutineItem {
-	key: string;
-	/** The block routine, for a block item. */
-	block?: BlockRoutine;
-	/** The block's tasks, or the one task of a task item. */
-	tasks: TaskRoutine[];
-	/** Everything adding this item writes, block first. */
-	routines: Routine[];
-}
-
-export interface RoutineList {
-	/** Block items by start time, then tasks that name a home block. */
-	items: RoutineItem[];
-	/** Tasks with no block, listed last and muted: allowed, but discouraged. */
-	loose: RoutineItem[];
-	/** How many routines in all. */
-	count: number;
 }
 
 /** Arrange a day's missing routines for the routines alert. */

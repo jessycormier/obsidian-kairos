@@ -10,7 +10,8 @@ import { groupRoutines } from "./routines.model";
 import { addRoutine } from "./routines.writer";
 import { parseRoutines } from "./routines.file";
 import { applyRoutines } from "./apply-routines.util";
-import { parseRule, type Rule } from "./recurrence-rules.util";
+import { parseRule } from "./recurrence-rules.util";
+import type { Rule } from "./recurrence-rules.type";
 import { parseSchedule } from "../../core/note/note.parser";
 
 const rule = (text: string): Rule => parseRule(text)!;

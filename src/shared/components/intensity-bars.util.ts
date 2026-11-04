@@ -4,10 +4,9 @@
 // The stored scale stays 0–5; this is display only.
 
 /** Bars in the stack. */
-export const INTENSITY_BARS = 3;
+import type { BarFill } from "./intensity-bars.type";
 
-/** One bar's state. */
-export type BarFill = "off" | "dim" | "lit";
+export const INTENSITY_BARS = 3;
 
 /** The level that lights `bar` (bar 0 is the bottom): 1, 3, 5. */
 function litLevel(bar: number): number {

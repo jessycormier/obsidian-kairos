@@ -23,51 +23,13 @@
 // Routines whose project or domain isn't active on the date are left out of
 // everything here, the hash included (decision 87, routine-owners.util.ts).
 
-import type { Block } from "../../core/models/block.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { ROUTINES_KEY, applyRoutines, routinesFor, routinesHash } from "./apply-routines.util";
-import { activeRoutines, type OwnerActive } from "./routine-owners.util";
-import type { ParsedRoutines, Routine } from "./routines.file";
+import { activeRoutines } from "./routine-owners.util";
+import type { ParsedRoutines } from "./routines-file.interface";
+import type { PrepInput, PrepOutcome, PrepPlan } from "./day-prep-plan.interface";
 
-export type PrepMode = "auto" | "manual";
-
-export interface PrepInput {
-	mode: PrepMode;
-	date: ISODate;
-	today: ISODate;
-	path: string;
-	blocks: Block[];
-	/** The note's `kairos-routines` value, if it has one. */
-	recorded?: string;
-	routines: Routine[];
-	/** Whether a routine's owner is active on a date; without it, every routine is. */
-	active?: OwnerActive;
-	/** The "Add routines to new daily notes" setting; only `auto` reads it. */
-	autoApply: boolean;
-}
-
-export type PrepOutcome =
-	| "past" // auto mode on a past day: nothing considered
-	| "off" // auto mode with the setting off: nothing
-	| "none-due" // no routines occur on this date
-	| "added" // at least one routine item was added
-	| "present" // routines are due and every one is already in the day
-	| "recorded" // auto mode, hash matches: day was set up before
-	| "stale"; // auto mode, hash differs: routines changed since set-up
-
-export interface PrepPlan {
-	outcome: PrepOutcome;
-	/** This day's blocks after routines. */
-	blocks: Block[];
-	/** How many routine blocks/tasks were added. */
-	added: number;
-	/** How many routines occur on this date (active owners only). */
-	due: number;
-	/** How many more occur but are paused because their owner isn't active. */
-	paused: number;
-	/** Frontmatter keys to set (string) or delete (null). */
-	frontmatter: Record<string, string | null>;
-}
+ // auto mode, hash differs: routines changed since set-up
 
 export function planDayPrep(input: PrepInput): PrepPlan {
 	const { mode, date, today, path, recorded } = input;

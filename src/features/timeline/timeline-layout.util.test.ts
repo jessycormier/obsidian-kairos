@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { dropRange, type TimelineGeometry } from "./timeline-layout.util";
+import { dropRange } from "./timeline-layout.util";
+import type { TimelineGeometry } from "./timeline-layout.interface";
 import { parseSchedule } from "../../core/note/note.parser";
 import { serialize } from "../../core/note/note.serializer";
 

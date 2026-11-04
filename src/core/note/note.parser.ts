@@ -38,6 +38,7 @@ import type { SourceRef } from "../models/source-ref.interface";
 import type { Task, TaskStatus } from "../models/task.interface";
 import type { TimeRange } from "../models/time.type";
 import { DEFAULT_HEADING, headingMatcher } from "./schedule-section.util";
+import type { TimeRangeText } from "./note-parser.type";
 
 // ─── configuration ─────────────────────────────────────────────
 
@@ -159,7 +160,6 @@ export {
   formatClock,
   formatTimeRange,
 };
-export type { TimeRangeText };
 
 // exported for unit testing of the pieces
 export {
@@ -320,10 +320,6 @@ function parseEndClock(value: string, start: number): number | undefined {
   const end = toEndMinutes(m[1], m[2], start);
   return end === 0 ? MIDNIGHT : end;
 }
-
-type TimeRangeText =
-  | { ok: true; range: TimeRange }
-  | { ok: false; error: string };
 
 /**
  * A time range typed into an editor ("9:00 - 10:30", "09:00–10:30") → the

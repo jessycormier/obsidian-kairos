@@ -6,16 +6,8 @@ import { App, Modal, Setting } from "obsidian";
 import { mount, unmount } from "svelte";
 import type { Component } from "svelte";
 import RulePicker from "./rule-picker.component.svelte";
-import type { Rule } from "./recurrence-rules.util";
-
-export interface RuleModalOptions {
-	title: string;
-	/** A line under the title saying what will happen. */
-	description?: string;
-	initial: Rule;
-	confirm: string;
-	onConfirm: (rule: Rule) => void;
-}
+import type { Rule } from "./recurrence-rules.type";
+import type { RuleModalOptions } from "./rule-modal.interface";
 
 export class RuleModal extends Modal {
 	private rule: Rule;

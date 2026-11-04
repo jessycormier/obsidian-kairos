@@ -18,8 +18,8 @@
 import type { Block } from "../../core/models/block.interface";
 import type { Task } from "../../core/models/task.interface";
 import type { TimeRange } from "../../core/models/time.type";
-import type { Rule } from "./recurrence-rules.util";
-import type { RoutineDraft } from "./routines.writer";
+import type { Rule } from "./recurrence-rules.type";
+import type { RoutineDraft } from "./routines-writer.type";
 
 /** A timed block → a block routine at that time. */
 export function blockRepeatDraft(block: Block, time: TimeRange, rule: Rule): RoutineDraft {

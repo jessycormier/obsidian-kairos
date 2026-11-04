@@ -14,13 +14,7 @@
 //   <span use:hoverHold={{ onopen: () => (open = true), onclose: () => (open = false) }}>…</span>
 
 import { movedPastSlop } from "./peek.action";
-
-export interface HoverHoldOptions {
-	onopen: () => void;
-	onclose: () => void;
-	/** Hover / hold time before the card opens, in ms. */
-	delay?: number;
-}
+import type { HoverHoldOptions } from "./hover-hold.interface";
 
 const DEFAULT_DELAY = 250;
 

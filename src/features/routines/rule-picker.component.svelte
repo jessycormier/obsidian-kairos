@@ -3,7 +3,8 @@
 	// weekdays, or a day of the month. It holds the choice in progress and
 	// reports every change; the host (a modal) decides when a choice is final.
 
-	import { ruleKey, ruleText, weekdayName, type Rule } from "./recurrence-rules.util";
+	import { ruleKey, ruleText, weekdayName } from "./recurrence-rules.util";
+	import type { Rule } from "./recurrence-rules.type";
 
 	interface Props {
 		initial: Rule;

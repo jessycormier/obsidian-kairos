@@ -2,7 +2,8 @@
 	// Faint hour lines across a multi-day timeline's columns, drawn once
 	// behind them. Pairs with HourGutter.
 
-	import { gridHeight, minutesToOffset, visibleHours, type TimelineGeometry } from "../../features/timeline/timeline-layout.util";
+	import { gridHeight, minutesToOffset, visibleHours } from "../../features/timeline/timeline-layout.util";
+	import type { TimelineGeometry } from "../../features/timeline/timeline-layout.interface";
 
 	interface Props {
 		geo: TimelineGeometry;

@@ -3,20 +3,23 @@
 	import { coarsePointer } from "../../shared/actions/picker-place.util";
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
-	import type { KairosSettings } from "../settings/settings.tab";
+	import type { KairosSettings } from "../settings/settings.interface";
 	import { showDayMenu } from "./day.menu";
 	import type { Association } from "../../core/models/association.type";
 	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
 	import type { Block } from "../../core/models/block.interface";
 	import type { Task, TaskStatus } from "../../core/models/task.interface";
 	import type { ISODate, TimeRange } from "../../core/models/time.type";
-	import type { Routine } from "../routines/routines.file";
+	import type { Routine } from "../routines/routines-file.interface";
 	import { addTaskToUnscheduled, moveBlockAcrossDays, setTaskStatus } from "../../core/note/note.writer";
 	import { nextDraftLine } from "../../core/note/draft-line.util";
-	import { blockOptions, type BlockOption } from "./block-options.util";
+	import { blockOptions } from "./block-options.util";
+	import type { BlockOption } from "./block-options.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
-	import type { GridDay, KairosIndex, Resolver } from "../../core/vault-index/kairos-index.service";
-	import type { DragPreview, FocusRequest, HoverTarget, ViewLinks } from "./view-links.store";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { GridDay, Resolver } from "../../core/vault-index/vault-index.interface";
+	import type { ViewLinks } from "./view-links.store";
+	import type { DragPreview, FocusRequest, HoverTarget } from "./view-links.interface";
 	import {
 		dateFromISO,
 		ensureNoteForDate,
@@ -34,13 +37,14 @@
 	import { placeUnderAnchor } from "../../shared/utils/floating.util";
 	import DayColumn from "./day-column.component.svelte";
 	import type { DayColumnHandle } from "./day-column-handle.interface";
-	import { incomingBlock, type IncomingBlock, type UnscheduledItem } from "./task-drag.util";
+	import { incomingBlock } from "./task-drag.util";
+	import type { IncomingBlock, UnscheduledItem } from "./task-drag.interface";
 	import TaskRow from "../tasks/task.component.svelte";
 	import { commitNumber } from "./number-field.util";
 	import { tooltip } from "../../shared/actions/tooltip.action";
 	import { requestRepeat } from "../routines/repeat-routine.util";
-	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.store";
-	import type { Leftover } from "../routines/carry-over.util";
+	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.interface";
+	import type { Leftover } from "../routines/carry-over.interface";
 	import LeftoverTask from "./leftover-task.component.svelte";
 	import HeaderBadge from "./header-badge.component.svelte";
 	import AssocGroup from "../associations/association-group.component.svelte";
@@ -50,7 +54,8 @@
 	import { groupByAssoc } from "./group-by-association.util";
 	import { leftOpenLabel, todayLeftovers } from "./today-leftovers.util";
 	import LeftoverButtons from "./leftover-buttons.component.svelte";
-	import { routinesToOffer, type RoutineList } from "../routines/routine-preview.util";
+	import { routinesToOffer } from "../routines/routine-preview.util";
+	import type { RoutineList } from "../routines/routine-preview.interface";
 	import { dayLabel } from "../routines/day-prep-plan.util";
 	import RoutinesAlert from "../routines/routines-alert.component.svelte";
 	import AssociationPicker from "../associations/association-picker.component.svelte";

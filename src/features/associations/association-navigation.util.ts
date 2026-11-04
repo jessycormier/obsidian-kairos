@@ -8,7 +8,7 @@
 
 import { TFile } from "obsidian";
 import type { App } from "obsidian";
-import type { ResolvedAssociation } from "./association.util";
+import type { ResolvedAssociation } from "./resolved-association.interface";
 
 /**
  * Open the project/domain behind a resolved association in a new tab. A no-op

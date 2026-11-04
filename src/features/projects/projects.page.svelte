@@ -23,7 +23,8 @@
 	import type { Domain } from "../../core/models/domain.interface";
 	import type { LifecycleState, Project } from "../../core/models/project.interface";
 	import type { ISODate } from "../../core/models/time.type";
-	import type { KairosIndex, ProjectsDomains } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { ProjectsDomains } from "../../core/vault-index/vault-index.interface";
 	import {
 		editDomainStatusRecord,
 		editProjectStatusRecord,

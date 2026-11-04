@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { newBlockLabel, planTaskDrop, type DayBlocks, type DragSource } from "./task-drop.util";
+import { newBlockLabel, planTaskDrop } from "./task-drop.util";
+import type { DayBlocks, DragSource } from "./task-drop.interface";
 import type { Block } from "../../core/models/block.interface";
 
 const plain = { duplicate: false };

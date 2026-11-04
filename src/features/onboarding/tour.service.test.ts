@@ -9,9 +9,9 @@ import {
 	summarizeDay,
 	track,
 } from "./tour-progress.util";
-import type { BlockSummary } from "./tour-progress.util";
+import type { BlockSummary } from "./tour-progress.interface";
 import { STEPS, isStepDone, resumeStep } from "./tour-steps.util";
-import type { StepContext } from "./tour-steps.util";
+import type { StepContext } from "./tour-steps.interface";
 import type { Day } from "../../core/models/day.interface";
 
 const path = "2026-10-29.md";

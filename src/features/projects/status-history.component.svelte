@@ -29,7 +29,7 @@
 		setDomainStatus,
 		setProjectStatus,
 	} from "./project.writer";
-	import type { StatusEdit } from "./project.file";
+	import type { StatusEdit } from "./project-file.interface";
 	import { effectiveStatus } from "./project.file";
 	import { dateFromISO, isoFromDate, todayISO } from "../../core/note/day-note.util";
 	import { shiftDays } from "../gantt/gantt-coordinates.util";
@@ -41,7 +41,8 @@
 	import Tag from "../../shared/components/tag.component.svelte";
 	import { icon } from "../../shared/actions/icon.action";
 	import StatusStrip from "./status-strip.component.svelte";
-	import { formatSpan, stretchesOf, type Stretch } from "./status-stretches.util";
+	import { formatSpan, stretchesOf } from "./status-stretches.util";
+	import type { Stretch } from "./status-stretches.interface";
 
 	interface Props {
 		index: KairosIndex;

@@ -24,10 +24,11 @@
 	import type { Block } from "../../core/models/block.interface";
 	import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
 	import type { ISODate } from "../../core/models/time.type";
-	import type { Resolver } from "../../core/vault-index/kairos-index.service";
-	import { isUnscheduledBlock, sourceKey, type BlockGroup } from "./grid.model";
+	import type { Resolver } from "../../core/vault-index/vault-index.interface";
+	import { isUnscheduledBlock, sourceKey } from "./grid.model";
+	import type { BlockGroup } from "./grid.interface";
 	import { formatClock } from "../../core/note/note.parser";
-	import type { Highlight } from "../timeline/view-links.store";
+	import type { Highlight } from "../timeline/view-links.interface";
 	import Task_ from "../tasks/task.component.svelte";
 	import { requestRepeat, requestRepeatBlock } from "../routines/repeat-routine.util";
 	import { addBlockMenuItems } from "../timeline/block.menu";

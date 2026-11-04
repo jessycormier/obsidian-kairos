@@ -9,21 +9,7 @@
 import type { StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
 import { daysBetween, shiftDays } from "../gantt/gantt-coordinates.util";
-
-export interface Stretch {
-	rec: StatusRecord;
-	/** The record before, whose stretch this transition ends. Undefined for the first. */
-	prev?: StatusRecord;
-	start: ISODate;
-	/** The next record's date (exclusive), or undefined while it runs on. */
-	end?: ISODate;
-	/** The stretch in effect today. */
-	current: boolean;
-	/** Starts after today. */
-	future: boolean;
-	/** Its length in days: to its end, or to today while it runs on. */
-	days: number;
-}
+import type { Stretch, StripPart } from "./status-stretches.interface";
 
 /** The stretches of a history, oldest first. */
 export function stretchesOf(history: StatusRecord[], today: ISODate): Stretch[] {
@@ -52,13 +38,6 @@ export function formatSpan(days: number): string {
 	const years = Math.floor(months / 12);
 	const rest = months % 12;
 	return rest === 0 ? `${years} yr` : `${years} yr ${rest} mo`;
-}
-
-/** One stretch's place on the strip, as fractions of its width. */
-export interface StripPart {
-	stretch: Stretch;
-	left: number;
-	width: number;
 }
 
 /**

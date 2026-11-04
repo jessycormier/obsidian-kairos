@@ -14,8 +14,8 @@
 	// a block. "Add all" adds everything and records the day as set up. Purely
 	// presentational: the parent owns the writes.
 
-	import type { Routine } from "./routines.file";
-	import type { RoutineItem, RoutineList } from "./routine-preview.util";
+	import type { Routine } from "./routines-file.interface";
+	import type { RoutineItem, RoutineList } from "./routine-preview.interface";
 	import { formatTimeRange } from "../../core/note/note.parser";
 	import Pill from "../../shared/components/pill.component.svelte";
 	import Popover from "../../shared/components/popover.component.svelte";
