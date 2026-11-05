@@ -5,7 +5,7 @@
   import type { ResolvedTask, Task, TaskStatus } from "../../core/models/task.interface";
   import type { TimeRange } from "../../core/models/time.type";
   import { formatTimeRange, parseTimeRangeText } from "../../core/note/note.parser";
-  import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight } from "./view-links.store";
+  import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight } from "./hover-highlight.util";
   import type { HoverTarget } from "./view-links.interface";
   import type { Resolver } from "../../core/vault-index/vault-index.interface";
   import { peek } from "../../shared/actions/peek.action";

@@ -16,7 +16,7 @@
 
 import type { Block } from "../../core/models/block.interface";
 import type { Minutes, TimeRange } from "../../core/models/time.type";
-import { MIN_BLOCK_MINUTES, SNAP_MINUTES, clampToDay, offsetToMinutes, snap } from "./timeline-layout.util";
+import { MIN_BLOCK_MINUTES, clampToDay, offsetToMinutes, snap } from "./timeline-layout.util";
 import type { TimelineGeometry } from "./timeline-layout.interface";
 import type { Gesture, GestureMode, GesturePreview, Grip } from "./timeline-interactions.interface";
 
@@ -152,6 +152,3 @@ function createDraft(
 	if (end - start < MIN_BLOCK_MINUTES) return undefined;
 	return { start, end };
 }
-
-// Re-export so components import interaction constants from one place.
-export { SNAP_MINUTES, MIN_BLOCK_MINUTES };

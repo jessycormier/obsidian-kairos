@@ -31,7 +31,8 @@
 		setProjectHistory,
 		setProjectStatus,
 	} from "../projects/project.writer";
-	import { BAR_HEIGHT, BAR_OFFSET, HEADER_COARSE_HEIGHT, HEADER_FINE_HEIGHT, HEADER_HEIGHT, INTERVALS, INTERVAL_LABEL, LABEL_PAD_Y, ROW_GAP, ROW_HEIGHT, rowHeightFor, rowTops, dateToX, getHeader, daysBetween, dragBounds, dragPeriod, shiftDays, stepView, SUB_UNIT, unitRange, viewLabel, viewRange, xToDate, xToDay } from "./gantt-coordinates.util";
+	import { BAR_HEIGHT, BAR_OFFSET, HEADER_COARSE_HEIGHT, HEADER_FINE_HEIGHT, HEADER_HEIGHT, INTERVALS, INTERVAL_LABEL, LABEL_PAD_Y, ROW_GAP, ROW_HEIGHT, rowHeightFor, rowTops, dateToX, getHeader, dragBounds, dragPeriod, stepView, SUB_UNIT, unitRange, viewLabel, viewRange, xToDate, xToDay } from "./gantt-coordinates.util";
+	import { daysBetween, shiftDays } from "../../shared/utils/iso-date.util";
 	import type { Interval } from "./gantt-coordinates.interface";
 	import { historyToSpans } from "./gantt-spans.util";
 	import type { Span } from "./gantt-spans.interface";

@@ -32,7 +32,7 @@
 	import type { StatusEdit } from "./project-file.interface";
 	import { effectiveStatus } from "./project.file";
 	import { dateFromISO, isoFromDate, todayISO } from "../../core/note/day-note.util";
-	import { shiftDays } from "../gantt/gantt-coordinates.util";
+	import { shiftDays } from "../../shared/utils/iso-date.util";
 	import Datepicker from "../../shared/components/datepicker.component.svelte";
 	import IconButton from "../../shared/components/icon-button.component.svelte";
 	import IntensityBars from "../../shared/components/intensity-bars.component.svelte";

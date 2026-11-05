@@ -77,7 +77,7 @@
 	import { swipeDays } from "../../shared/actions/swipe-days.action";
 	import IconButton from "../../shared/components/icon-button.component.svelte";
 	import { holdingDrag } from "../../shared/actions/touch-hold.util";
-	import { shiftDays } from "../gantt/gantt-coordinates.util";
+	import { shiftDays } from "../../shared/utils/iso-date.util";
 
 	/** The hour gutter's width (`.week-gutter-spacer`), left of the days. */
 	const GUTTER_PX = 46;

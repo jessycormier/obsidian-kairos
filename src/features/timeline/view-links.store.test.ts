@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-	blockLit,
-	hoverBlockTarget,
-	hoverTaskTarget,
-	taskHighlight,
-	ViewLinks,
-} from "./view-links.store";
+import { ViewLinks } from "./view-links.store";
+import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight } from "./hover-highlight.util";
 import type { Block } from "../../core/models/block.interface";
 import type { Task } from "../../core/models/task.interface";
 

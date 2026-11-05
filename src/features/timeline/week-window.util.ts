@@ -13,7 +13,7 @@
 // Pure and Svelte-free (like timeline-layout.util.ts next door) so every span can be pinned
 // down in a unit test instead of checked by eye in the running plugin.
 
-import { shiftDays } from "../gantt/gantt-coordinates.util";
+import { shiftDays } from "../../shared/utils/iso-date.util";
 import type { ISODate } from "../../core/models/time.type";
 
 /** Each side of the window spans 1–7 days — the settings sliders' limits. */

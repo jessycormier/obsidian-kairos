@@ -18,7 +18,7 @@
 
 import type { StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
-import { daysBetween, shiftDays } from "./gantt-coordinates.util";
+import { daysBetween, shiftDays } from "../../shared/utils/iso-date.util";
 import type { Bounds, StretchEditKind } from "./stretch-edits.interface";
 
 interface Located {

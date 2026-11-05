@@ -1,8 +1,10 @@
 // Kairos index — the in-memory derived layer every view reads from.
 //
-// This module is the engine: it owns per-file reparse, the day signature used
-// for echo-dedup, the byProject/byDomain rollups, and the Svelte stores views
-// subscribe to. It is the ONE place mediating between markdown and the UI.
+// This module is the engine: it holds the state and the Svelte stores views
+// subscribe to, driving the pure per-file reparse and byProject/byDomain
+// rollups (index-state.util.ts) and the echo-dedup signatures
+// (index-signature.util.ts). It is the ONE place mediating between markdown
+// and the UI.
 //
 // The `obsidian-daily-notes-interface` import below is the only app dependency;
 // unit tests mock that module (`vi.mock`) so the whole engine runs under vitest
@@ -21,284 +23,25 @@
 
 import { derived, writable } from "svelte/store";
 import type { Readable, Writable } from "svelte/store";
-import { getDateFromPath } from "obsidian-daily-notes-interface";
 import type { BacklogEntry } from "../models/backlog-entry.interface";
 import type { Block } from "../models/block.interface";
 import type { Day } from "../models/day.interface";
 import type { Domain } from "../models/domain.interface";
 import type { Project } from "../models/project.interface";
-import type { SourceRef } from "../models/source-ref.interface";
-import type { ResolvedTask } from "../models/task.interface";
 import type { ISODate } from "../models/time.type";
 import { parseSchedule } from "../note/note.parser";
 import { serialize } from "../note/note.serializer";
 import { parseBacklog, serializeBacklog } from "../../features/backlog/backlog.file";
-import { DEFAULT_HEADING, spliceSection } from "../note/schedule-section.util";
+import { spliceSection } from "../note/schedule-section.util";
 import { resolveBlocks } from "../note/task-resolver.util";
 import { previousDay } from "../../features/routines/carry-over.util";
-import {
-	newDomain,
-	newProject,
-	parseDomain,
-	parseProject,
-	renameGuard,
-	replaceFrontmatter,
-	serializeDomainFile,
-	serializeDomainFrontmatter,
-	serializeProjectFile,
-	serializeProjectFrontmatter,
-} from "../../features/projects/project.file";
-import { domainProjects, resolveAssociation } from "../../features/associations/association.util";
+import { newDomain, newProject, renameGuard, replaceFrontmatter, serializeDomainFile, serializeDomainFrontmatter, serializeProjectFile, serializeProjectFrontmatter } from "../../features/projects/project.file";
+import { resolveAssociation } from "../../features/associations/association.util";
 import { associationOptions } from "../../features/associations/association-options.util";
 import type { AssociationOption } from "../../features/associations/association-options.interface";
-import type { DomainView, FileKind, GridDay, GridSnapshot, IndexDeps, IndexPaths, IndexState, ProjectView, ProjectsDomains, Resolver } from "./vault-index.interface";
-
-// ─── file routing ──────────────────────────────────────────────
-
-/** Is `path` the folder itself or something beneath it? */
-function isUnder(path: string, folder: string): boolean {
-	return folder !== "" && (path === folder || path.startsWith(folder + "/"));
-}
-
-/**
- * Route a path to the kind of file it is. Daily-note detection defers to the
- * Daily Notes plugin's own folder + format config (via `getDateFromPath`); the
- * rest route by Kairos's own settings. Called fresh per event so a just-created
- * or renamed note resolves against the current config, not a stale snapshot.
- */
-export function classify(path: string, settings: IndexPaths): FileKind {
-	const m = getDateFromPath(path, "day");
-	if (m) return { kind: "day", date: m.format("YYYY-MM-DD") };
-	if (path === settings.backlogPath) return { kind: "backlog" };
-	if (isUnder(path, settings.projectsFolder)) return { kind: "project" };
-	if (isUnder(path, settings.domainsFolder)) return { kind: "domain" };
-	return { kind: "ignore" };
-}
-
-// ─── pure state ────────────────────────────────────────────────
-
-export function emptyState(): IndexState {
-	return {
-		days: new Map(),
-		projects: new Map(),
-		domains: new Map(),
-		backlog: [],
-		byProject: new Map(),
-		byDomain: new Map(),
-		byDomainProjects: new Map(),
-	};
-}
-
-/**
- * Recompute byProject / byDomain from every resolved task across all days. Runs
- * after any change to the day/project/domain maps.
- *
- * Buckets by an association's `id`. Alias resolution (old name → current
- * project) is not done yet — it needs the project/domain maps, which is your
- * half. The seam is `ownerKey`; extend it to canonicalize once aliases exist.
- */
-export function deriveLookups(state: IndexState): IndexState {
-	const byProject = new Map<string, ResolvedTask[]>();
-	const byDomain = new Map<string, ResolvedTask[]>();
-
-	for (const day of state.days.values()) {
-		for (const task of resolveBlocks(day.blocks, day.date)) {
-			const owner = task.owner;
-			if (!owner) continue;
-			const bucket = owner.kind === "project" ? byProject : byDomain;
-			const key = ownerKey(owner.id);
-			const list = bucket.get(key);
-			if (list) list.push(task);
-			else bucket.set(key, [task]);
-		}
-	}
-
-	// Child projects per domain (by the domain's stable id), for the Grid view's
-	// expand-domains toggle. Cheap to recompute alongside the task rollups since
-	// both run on any project/domain/day change.
-	const byDomainProjects = new Map<string, Project[]>();
-	for (const domain of state.domains.values()) {
-		byDomainProjects.set(domain.id, domainProjects(domain.id, state.projects));
-	}
-
-	return { ...state, byProject, byDomain, byDomainProjects };
-}
-
-/** Canonicalize an association id. TODO: fold in alias → current-name mapping. */
-function ownerKey(id: string): string {
-	return id;
-}
-
-/**
- * Reparse one daily note into the state. Pure: `mtime` is passed in rather than
- * looked up, so tests need no vault. Returns a NEW state (never mutates input).
- */
-export function reindexDay(
-	state: IndexState,
-	path: string,
-	date: ISODate,
-	content: string,
-	mtime: number,
-	heading: string = DEFAULT_HEADING,
-): IndexState {
-	const day: Day = {
-		date,
-		path,
-		mtime,
-		blocks: parseSchedule(content, path, heading),
-	};
-	const days = new Map(state.days);
-	days.set(date, day);
-	return deriveLookups({ ...state, days });
-}
-
-/** Drop a day from the state (its file was deleted). */
-export function removeDay(state: IndexState, date: ISODate): IndexState {
-	if (!state.days.has(date)) return state;
-	const days = new Map(state.days);
-	days.delete(date);
-	return deriveLookups({ ...state, days });
-}
-
-/**
- * Reparse a project file into the state, keyed by the project's name (since
- * associations match by name). A file that no longer parses as a project (tag
- * removed) drops any prior entry at `path`.
- */
-export function reindexProject(
-	state: IndexState,
-	path: string,
-	content: string,
-): IndexState {
-	const projects = new Map(state.projects);
-	dropByPath(projects, path);
-	const project = parseProject(content, path);
-	if (project) projects.set(project.name, project);
-	return deriveLookups({ ...state, projects });
-}
-
-/** Reparse a domain file into the state, keyed by the domain's name. */
-export function reindexDomain(
-	state: IndexState,
-	path: string,
-	content: string,
-): IndexState {
-	const domains = new Map(state.domains);
-	dropByPath(domains, path);
-	const domain = parseDomain(content, path);
-	if (domain) domains.set(domain.name, domain);
-	return deriveLookups({ ...state, domains });
-}
-
-/** Remove whatever project/domain a deleted file provided. */
-export function removeProjectFile(state: IndexState, path: string): IndexState {
-	const projects = new Map(state.projects);
-	if (!dropByPath(projects, path)) return state;
-	return deriveLookups({ ...state, projects });
-}
-
-export function removeDomainFile(state: IndexState, path: string): IndexState {
-	const domains = new Map(state.domains);
-	if (!dropByPath(domains, path)) return state;
-	return deriveLookups({ ...state, domains });
-}
-
-/**
- * Reparse the global backlog file into the state. The backlog is a single flat
- * file (spec §2.6), so — unlike days/projects/domains — reindexing replaces the
- * whole list rather than one keyed entry. Backlog entries are not tasks and
- * feed no rollup, so `deriveLookups` need not rerun; the caller republishes the
- * backlog store directly.
- */
-export function reindexBacklog(
-	state: IndexState,
-	path: string,
-	content: string,
-): IndexState {
-	return { ...state, backlog: parseBacklog(content, path) };
-}
-
-/** Drop the backlog (its file was deleted): an empty list. */
-export function removeBacklog(state: IndexState): IndexState {
-	return { ...state, backlog: [] };
-}
-
-/**
- * Remove any entry sourced from `path`. Needed because these maps are keyed by
- * name, not path: a rename or a name change means the old key must be found via
- * its source. Returns whether anything was removed.
- */
-function dropByPath(
-	map: Map<string, { source: SourceRef }>,
-	path: string,
-): boolean {
-	for (const [key, value] of map) {
-		if (value.source.path === path) {
-			map.delete(key);
-			return true;
-		}
-	}
-	return false;
-}
-
-// ─── day signature (echo-dedup) ────────────────────────────────
-
-/**
- * A stable string over a day's *parsed schedule* — deliberately not the raw
- * file text. Two files differing only in whitespace, or in prose outside the
- * Schedule section, share a signature; an echo of our own write matches memory
- * and notifies no one. This is what stops the view bouncing after an edit.
- *
- * Order-sensitive (block order is meaningful) and covers everything the UI
- * renders: time, title, association, metadata, and each block's tasks.
- */
-export function daySignature(blocks: Block[]): string {
-	return JSON.stringify(blocks.map(blockSig));
-}
-
-type TaskSig = [string, Block["tasks"][number]["status"], [string, string] | null, string | null];
-type BlockSig = [
-	[number, number] | null,
-	string,
-	[string, string] | null,
-	string | null,
-	TaskSig[],
-];
-
-function blockSig(b: Block): BlockSig {
-	return [
-		b.time ? [b.time.start, b.time.end] : null,
-		b.title,
-		b.assoc ? [b.assoc.kind, b.assoc.id] : null,
-		b.metadata ?? null,
-		b.tasks.map(taskSig),
-	];
-}
-
-function taskSig(t: Block["tasks"][number]): TaskSig {
-	return [
-		t.text,
-		t.status,
-		t.assoc ? [t.assoc.kind, t.assoc.id] : null,
-		t.metadata ?? null,
-	];
-}
-
-/**
- * A stable string over the backlog's parsed entries — order-sensitive (entry
- * order is user-meaningful) and covering everything the view renders: text,
- * association, resurface date. Excludes `source.line`, which shifts on every
- * edit, so an echo of our own write matches memory and notifies no one.
- */
-export function backlogSignature(entries: BacklogEntry[]): string {
-	return JSON.stringify(
-		entries.map((e) => [
-			e.text,
-			e.assoc ? [e.assoc.kind, e.assoc.id] : null,
-			e.resurface ?? null,
-		]),
-	);
-}
+import type { DomainView, GridDay, GridSnapshot, IndexDeps, IndexState, ProjectView, ProjectsDomains, Resolver } from "./vault-index.interface";
+import { backlogSignature, daySignature } from "./index-signature.util";
+import { classify, deriveLookups, emptyState, reindexBacklog, reindexDay, reindexDomain, reindexProject, removeBacklog, removeDay, removeDomainFile, removeProjectFile } from "./index-state.util";
 
 // ─── the live index (stores + watcher shell) ───────────────────
 

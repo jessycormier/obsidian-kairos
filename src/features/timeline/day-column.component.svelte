@@ -12,7 +12,8 @@
 	import { addTaskToUnscheduled, deleteBlock, deleteBlocks, makeBlock, nestTaskUnderBlock, notesWithAdded, notesWithText } from "../../core/note/note.writer";
 	import { moveTaskToBacklog } from "../backlog/backlog.writer";
 	import { formatTimeRange } from "../../core/note/note.parser";
-	import { daySignature, type KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import { daySignature } from "../../core/vault-index/index-signature.util";
 	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { hitTestTimeline } from "./task-drag.util";

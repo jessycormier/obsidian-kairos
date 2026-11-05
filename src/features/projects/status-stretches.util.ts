@@ -8,7 +8,7 @@
 
 import type { StatusRecord } from "../../core/models/project.interface";
 import type { ISODate } from "../../core/models/time.type";
-import { daysBetween, shiftDays } from "../gantt/gantt-coordinates.util";
+import { daysBetween, shiftDays } from "../../shared/utils/iso-date.util";
 import type { Stretch, StripPart } from "./status-stretches.interface";
 
 /** The stretches of a history, oldest first. */

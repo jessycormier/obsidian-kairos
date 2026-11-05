@@ -5,33 +5,8 @@ import type { ProjectsDomains } from "../../core/vault-index/vault-index.interfa
 import { appendActivePeriod, appendStatus, effectiveStatus } from "../projects/project.file";
 import { historyToSpans } from "./gantt-spans.util";
 import { activeInWindow, visibleEntities } from "./gantt-rows.util";
-import {
-	dateToX,
-	daysBetween,
-	dragBounds,
-	dragPeriod,
-	getHeader,
-	getUnitViewport,
-	getViewportWidth,
-	isoWeekNumber,
-	LABEL_PAD_Y,
-	ROW_GAP,
-	ROW_HEIGHT,
-	rowHeightFor,
-	rowTops,
-	shiftDays,
-	shiftMonths,
-	startOfQuarter,
-	startOfWeek,
-	stepUnit,
-	stepView,
-	unitLabel,
-	unitRange,
-	viewLabel,
-	viewRange,
-	xToDate,
-	xToDay,
-} from "./gantt-coordinates.util";
+import { dateToX, dragBounds, dragPeriod, getHeader, getUnitViewport, getViewportWidth, isoWeekNumber, LABEL_PAD_Y, ROW_GAP, ROW_HEIGHT, rowHeightFor, rowTops, shiftMonths, startOfQuarter, startOfWeek, stepUnit, stepView, unitLabel, unitRange, viewLabel, viewRange, xToDate, xToDay } from "./gantt-coordinates.util";
+import { daysBetween, shiftDays } from "../../shared/utils/iso-date.util";
 
 const h = (
 	...rs: [string, "active" | "inactive" | "archived", string?][]

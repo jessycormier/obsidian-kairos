@@ -39,7 +39,8 @@
 	import BacklogNudge from "../backlog/backlog-nudge.component.svelte";
 	import { blockOptions } from "./block-options.util";
 	import type { BlockOption } from "./block-options.interface";
-	import { daySignature, type KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import { daySignature } from "../../core/vault-index/index-signature.util";
 	import type { Resolver } from "../../core/vault-index/vault-index.interface";
 	import type { Association } from "../../core/models/association.type";
 	import { navigateToAssociation } from "../associations/association-navigation.util";

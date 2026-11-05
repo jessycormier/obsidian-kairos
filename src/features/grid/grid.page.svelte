@@ -62,7 +62,8 @@
 		const v = viewEl ? parseFloat(getComputedStyle(viewEl).getPropertyValue("--kairos-row-label-width")) : NaN;
 		return Number.isFinite(v) ? v : 180;
 	}
-	import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight, type ViewLinks } from "../timeline/view-links.store";
+	import type { ViewLinks } from "../timeline/view-links.store";
+	import { blockLit, hoverBlockTarget, hoverTaskTarget, taskHighlight } from "../timeline/hover-highlight.util";
 	import type { Highlight, HoverTarget } from "../timeline/view-links.interface";
 	import { navigateToAssociation } from "../associations/association-navigation.util";
 	import { blockGroups, isUnscheduledBlock, buildRows, dayStatus, intensityChange, intensityOn, intentionChange, blockDropAssociation, dropAssociation, gridDropLine, isNoOpGroupDrop, sourceKey, rolledUpProjectOf, rolledUpProjects, rowAssociation } from "./grid.model";
