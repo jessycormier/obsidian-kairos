@@ -5,8 +5,8 @@
 // palette unchanged, so the menu is a convenience, not the only route.
 
 import { Menu } from "obsidian";
-import type Kairos from "../main";
-import { activateRoutinesView } from "../features/routines/routines.register";
+import type Kairos from "../../main";
+import { activateRoutinesView } from "../../features/routines/routines.register";
 import type { KairosViewEntry } from "./view-menu.interface";
 
 /**

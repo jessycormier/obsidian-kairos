@@ -8,7 +8,7 @@
 
 ## UI and the design system
 
-Read `DESIGN.md` before adding or changing UI. Build from its components (`IconButton`, `AssocGroup`, …) and tokens instead of copying another view's CSS. `src/designSystem.test.ts` fails if a change adds hex colours, pixel font sizes or radii, pasted SVG icons or hand-made frameless buttons.
+Read `DESIGN.md` before adding or changing UI. Build from its components (`IconButton`, `AssocGroup`, …) and tokens instead of copying another view's CSS. `src/shared/design-system.test.ts` fails if a change adds hex colours, pixel font sizes or radii, pasted SVG icons or hand-made frameless buttons.
 
 ## Environment & tooling
 
@@ -54,6 +54,7 @@ npm run build
       core/
         models/               # The domain model: Task, Block, Day, Project, ...
         note/                 # Daily-note format: parser, serializer, writer, dates
+        plugin/               # The plugin shell: view menu, cross-view request types
         vault-index/          # The in-memory index every view reads, and its vault adapter
       shared/
         actions/              # Svelte `use:` actions and their geometry helpers

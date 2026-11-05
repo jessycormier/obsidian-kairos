@@ -18,7 +18,7 @@ import {
 } from './features/projects/projects.view';
 import { KAIROS_GANTT_VIEW_TYPE, KairosGanttView } from './features/gantt/gantt.view';
 import { IndexAdapter } from './core/vault-index/index-adapter.service';
-import { openViewMenu } from './core/view.menu';
+import { openViewMenu } from './core/plugin/view.menu';
 import { DayPreparer } from './features/routines/day-prep.service';
 import { RoutinesStore } from './features/routines/routines.store';
 import { registerRoutines } from './features/routines/routines.register';
@@ -26,7 +26,7 @@ import { RoutinesFeed } from './features/routines/routines-feed.store';
 import { ViewLinks } from './features/timeline/view-links.store';
 import { NEW_TOUR, Tour } from './features/onboarding/tour.service';
 import type { TourState } from './features/onboarding/tour.interface';
-import type { BacklogFilter, RevealRequest } from './core/plugin-requests.interface';
+import type { BacklogFilter, RevealRequest } from './core/plugin/plugin-requests.interface';
 
 export default class Kairos extends Plugin {
 	/**

@@ -1,4 +1,4 @@
-import type { ISODate } from './models/time.type';
+import type { ISODate } from '../models/time.type';
 
 /**
  * A request to reveal a specific block in the Day view. Pushed by the Grid view
