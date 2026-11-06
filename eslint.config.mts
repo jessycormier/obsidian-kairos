@@ -102,7 +102,7 @@ export default defineConfig(
 			// to $state (copy-on-write). Neither is mutated reactively, so
 			// SvelteMap/SvelteSet would only add overhead.
 			'svelte/prefer-svelte-reactivity': 'off',
-			// Portal.svelte moves its element to the target on purpose.
+			// portal.component.svelte moves its element to the target on purpose.
 			'svelte/no-dom-manipulating': 'warn',
 		},
 	},

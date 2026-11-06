@@ -8,7 +8,7 @@
 
 ## UI and the design system
 
-Read `DESIGN.md` before adding or changing UI. Build from its components (`IconButton`, `AssocGroup`, …) and tokens instead of copying another view's CSS. `src/designSystem.test.ts` fails if a change adds hex colours, pixel font sizes or radii, pasted SVG icons or hand-made frameless buttons.
+Read `DESIGN.md` before adding or changing UI. Build from its components (`IconButton`, `AssocGroup`, …) and tokens instead of copying another view's CSS. `src/shared/design-system.test.ts` fails if a change adds hex colours, pixel font sizes or radii, pasted SVG icons or hand-made frameless buttons.
 
 ## Environment & tooling
 
@@ -47,22 +47,45 @@ npm run build
 
 - **Organize code into multiple files**: Split functionality across separate modules rather than putting everything in `main.ts`.
 - Source lives in `src/`. Keep `main.ts` small and focused on plugin lifecycle (loading, unloading, registering commands).
-- **Example file structure**:
+- **Folder layout**: code is grouped by domain, not by kind.
     ```
     src/
-      main.ts           # Plugin entry point, lifecycle management
-      settings.ts       # Settings interface and defaults
-      commands/         # Command implementations
-        command1.ts
-        command2.ts
-      ui/              # UI components, modals, views
-        modal.ts
-        view.ts
-      utils/           # Utility functions, helpers
-        helpers.ts
-        constants.ts
-      types.ts         # TypeScript interfaces and types
+      main.ts                 # Plugin lifecycle only
+      core/
+        models/               # The domain model: Task, Block, Day, Project, ...
+        note/                 # Daily-note format: parser, serializer, writer, dates
+        plugin/               # The plugin shell: view menu, cross-view request types
+        vault-index/          # The in-memory index every view reads, and its vault adapter
+      shared/
+        actions/              # Svelte `use:` actions and their geometry helpers
+        components/           # UI pieces used by more than one feature
+        utils/                # Domain-agnostic helpers
+      features/<domain>/      # associations, backlog, gantt, grid, onboarding,
+                              # projects, routines, settings, tasks, timeline
+      testing/                # Test-only stubs
     ```
+    A feature folder holds everything for its domain: its Obsidian view, the page that view mounts, its components, its pure logic, its types and its tests. Code used by one feature lives in that feature; move it to `shared/` once a second feature needs it.
+- **File names**: kebab-case, with a suffix that says what the file is.
+
+    | Suffix | What it holds |
+    | --- | --- |
+    | `.view.ts` | An Obsidian `ItemView` |
+    | `.page.svelte` | The top-level Svelte component a view mounts |
+    | `.component.svelte` | Any other Svelte component |
+    | `.interface.ts` / `.type.ts` | Exported types for one concept (`.type.ts` when it holds no interface) |
+    | `.model.ts` | Pure view model: data in, the shape a view renders out |
+    | `.util.ts` | Pure helper functions |
+    | `.service.ts` | Stateful classes and Obsidian glue |
+    | `.store.ts` | Svelte stores |
+    | `.action.ts` | A Svelte `use:` action |
+    | `.class.ts` | A plain class that isn't a service |
+    | `.file.ts`, `.parser.ts`, `.serializer.ts` | Reading and writing an on-disk format |
+    | `.writer.ts` | Edits that write back to a file |
+    | `.modal.ts`, `.menu.ts`, `.tab.ts` | Obsidian modals, menus, settings tab |
+    | `.register.ts` | Wiring a feature registers with the plugin |
+    | `.test.ts` | Vitest tests, next to the file they test (`grid.model.test.ts`) |
+
+- **Types**: exported interfaces and types go in a sibling `.interface.ts` / `.type.ts`, one file per concept (`task.interface.ts` holds `Task`, `ResolvedTask` and `TaskStatus`), never inside an implementation file. Import them from the file that declares them; there are no barrel files. A component's `Props` and a file's private helper types stay where they are used.
 - **Do not commit build artifacts**: Never commit `node_modules/`, `main.js`, or other generated files to version control.
 - Keep the plugin small. Avoid large dependencies. Prefer browser-compatible packages.
 - Generated output should be placed at the plugin root or `dist/` depending on your build setup. Release artifacts must end up at the top level of the plugin folder in the vault (`main.js`, `manifest.json`, `styles.css`).

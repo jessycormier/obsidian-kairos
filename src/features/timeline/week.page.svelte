@@ -1,0 +1,1562 @@
+<script lang="ts">
+	import type { App } from "obsidian";
+	import { coarsePointer } from "../../shared/actions/picker-place.util";
+	import { onMount } from "svelte";
+	import type { Readable } from "svelte/store";
+	import type { KairosSettings } from "../settings/settings.interface";
+	import { showDayMenu } from "./day.menu";
+	import type { Association } from "../../core/models/association.type";
+	import type { BacklogEntry } from "../../core/models/backlog-entry.interface";
+	import type { Block } from "../../core/models/block.interface";
+	import type { Task, TaskStatus } from "../../core/models/task.interface";
+	import type { ISODate, TimeRange } from "../../core/models/time.type";
+	import type { Routine } from "../routines/routines-file.interface";
+	import { addTaskToUnscheduled, moveBlockAcrossDays, setTaskStatus } from "../../core/note/note.writer";
+	import { nextDraftLine } from "../../core/note/draft-line.util";
+	import { blockOptions } from "./block-options.util";
+	import type { BlockOption } from "./block-options.interface";
+	import { navigateToAssociation } from "../associations/association-navigation.util";
+	import type { KairosIndex } from "../../core/vault-index/kairos-index.service";
+	import type { GridDay, Resolver } from "../../core/vault-index/vault-index.interface";
+	import type { ViewLinks } from "./view-links.store";
+	import type { DragPreview, FocusRequest, HoverTarget } from "./view-links.interface";
+	import {
+		dateFromISO,
+		ensureNoteForDate,
+		isoFromDate,
+		notePathForDate,
+		todayISO,
+	} from "../../core/note/day-note.util";
+	import { surfacedOn } from "../backlog/backlog.model";
+	import {
+		insertEntry,
+		resurfaceTomorrow,
+		setResurface,
+	} from "../backlog/backlog.writer";
+	import BacklogNudge from "../backlog/backlog-nudge.component.svelte";
+	import { placeUnderAnchor } from "../../shared/utils/floating.util";
+	import DayColumn from "./day-column.component.svelte";
+	import type { DayColumnHandle } from "./day-column-handle.interface";
+	import { incomingBlock } from "./task-drag.util";
+	import type { IncomingBlock, UnscheduledItem } from "./task-drag.interface";
+	import TaskRow from "../tasks/task.component.svelte";
+	import { commitNumber } from "./number-field.util";
+	import { tooltip } from "../../shared/actions/tooltip.action";
+	import { requestRepeat } from "../routines/repeat-routine.util";
+	import type { LeftoverActions, RoutineActions } from "../routines/routines-feed.interface";
+	import type { Leftover } from "../routines/carry-over.interface";
+	import LeftoverTask from "./leftover-task.component.svelte";
+	import HeaderBadge from "./header-badge.component.svelte";
+	import AssocGroup from "../associations/association-group.component.svelte";
+	import DateCard from "./date-card.component.svelte";
+	import HourGutter from "../../shared/components/hour-gutter.component.svelte";
+	import HourLines from "../../shared/components/hour-lines.component.svelte";
+	import { groupByAssoc } from "./group-by-association.util";
+	import { leftOpenLabel, todayLeftovers } from "./today-leftovers.util";
+	import LeftoverButtons from "./leftover-buttons.component.svelte";
+	import { routinesToOffer } from "../routines/routine-preview.util";
+	import type { RoutineList } from "../routines/routine-preview.interface";
+	import { dayLabel } from "../routines/day-prep-plan.util";
+	import RoutinesAlert from "../routines/routines-alert.component.svelte";
+	import AssociationPicker from "../associations/association-picker.component.svelte";
+	import { createAssociation } from "../associations/create-association.util";
+	import BlockPicker from "./block-picker.component.svelte";
+	import Datepicker from "../../shared/components/datepicker.component.svelte";
+	import Popover from "../../shared/components/popover.component.svelte";
+	import StepArrows from "../../shared/components/step-arrows.component.svelte";
+	import { geometryFromSettings } from "./timeline-layout.util";
+	import {
+		fitWindow,
+		WEEK_MIN_COLUMN_PX,
+		clampSpan,
+		stepAnchor,
+		windowDates,
+		windowWidth,
+	} from "./week-window.util";
+	import { intoViewHeader } from "../../shared/actions/view-header.action";
+	import { swipeDays } from "../../shared/actions/swipe-days.action";
+	import IconButton from "../../shared/components/icon-button.component.svelte";
+	import { holdingDrag } from "../../shared/actions/touch-hold.util";
+	import { shiftDays } from "../../shared/utils/iso-date.util";
+
+	/** The hour gutter's width (`.week-gutter-spacer`), left of the days. */
+	const GUTTER_PX = 46;
+
+	interface Props {
+		app: App;
+		index: KairosIndex;
+		// Reactive settings store: the plugin republishes it on every write, so a
+		// change from here, the Day view, or the settings tab reaches us live.
+		settings$: Readable<KairosSettings>;
+		// The one write path back to the plugin; it persists and republishes.
+		updateSettings: (mutate: (s: KairosSettings) => void) => void;
+		// The Grid ↔ timeline bridge (features/timeline/view-links.store.ts), handed on to each column.
+		links: ViewLinks;
+		// Each day's missing routines, behind a pill on its column header.
+		routineActions: RoutineActions;
+		// Yesterday's open tasks, for today's column of the Inbox strip.
+		leftoverActions: LeftoverActions;
+		// The leaf's tab header, which the header bar moves into.
+		viewHeader?: HTMLElement;
+	}
+
+	let { app, index, settings$, updateSettings, links, routineActions, leftoverActions, viewHeader }: Props =
+		$props();
+
+	// The hovered item, for the unscheduled strip this view renders itself
+	// (subscribed on mount, like the resolver).
+	let hovered = $state<HoverTarget | null>(null);
+	// The live task drag from any view: the Unscheduled strip shows (even when
+	// empty) and lights the day a drop would land in.
+	let dragPreview = $state<DragPreview | null>(null);
+	function inboxDropDate(): ISODate | null {
+		const drop = dragPreview?.drop;
+		return drop?.kind === "unscheduled" ? drop.date : null;
+	}
+	function stripHover(task: Task, on: boolean) {
+		const target: HoverTarget = { kind: "task", path: task.source.path, line: task.source.line };
+		if (on) links.setHover(target);
+		else links.clearHover(target);
+	}
+	function stripLinked(task: Task): boolean {
+		const h = hovered;
+		return h?.kind === "task" && h.path === task.source.path && h.line === task.source.line;
+	}
+
+	// Local reactive view of the settings. `$store` auto-subscribes, so every
+	// derived below recomputes the instant the plugin republishes.
+	const settings = $derived($settings$);
+
+	// Live association resolver (re-tints on project/domain file changes).
+	let resolve = $state<Resolver>(() => ({ displayName: "", resolved: false }));
+
+	// Shared vertical geometry — one time axis for the whole week.
+	// On a phone hours are drawn taller, so short blocks can be tapped.
+	const geo = $derived(geometryFromSettings(settings, { coarse: coarsePointer(window) }));
+
+	// ── The week window ──
+	// Default window is [today − before, today + after] from settings. It's still
+	// navigable: `anchor` is the window's first day; arrows shift it, "Today"
+	// snaps back to the settings-defined window around today. All of the day
+	// arithmetic lives in week-window.util.ts so it can be unit-tested at every span.
+
+	// With "Fit days to the width" on, the window is as many days as fit the
+	// columns' width (week-window.util.ts, spec decision 139); off, the settings' span.
+	let scrollWidth = $state(0);
+	const fit = $derived(
+		settings.fitDaysToWidth ? fitWindow(scrollWidth - GUTTER_PX, WEEK_MIN_COLUMN_PX) : null,
+	);
+	const before = $derived(fit ? fit.before : clampSpan(settings.weekDaysBefore));
+	const after = $derived(fit ? fit.size - 1 - fit.before : clampSpan(settings.weekDaysAfter));
+	const windowSize = $derived(fit ? fit.size : windowWidth(before, after)); // inclusive of today
+
+	// The window's first day, pinned only once the user navigates. While it's
+	// null we're on the settings-defined default, which is *derived* from today
+	// and the current span rather than stored — so the view can never open on a
+	// window computed from a span it no longer has.
+	let pinnedAnchor = $state<ISODate | null>(null);
+	const atDefault = $derived(pinnedAnchor === null);
+	const anchor = $derived(pinnedAnchor ?? shiftDays(todayISO(), -before));
+
+	const dates = $derived(windowDates(anchor, windowSize));
+
+	// ── Routines ──
+	// A day's missing routines sit behind a pill on its column header, opened on
+	// hover (RoutinesAlert), the same as in the Grid. The day blocks come from
+	// the index's grid feed for the window.
+	// The stores are fixed for the view's lifetime, so reading them once is right.
+	// svelte-ignore state_referenced_locally
+	const { routines$, marks$, active$ } = routineActions;
+	let weekDays = $state<GridDay[]>([]);
+	$effect(() => {
+		return index.grid(dates).subscribe((snap) => {
+			weekDays = snap.days;
+		});
+	});
+	const routinesByDate = $derived.by(() => {
+		const today = todayISO();
+		const out = new Map<ISODate, RoutineList>();
+		for (const day of weekDays) {
+			const recorded = $marks$(day.date);
+			out.set(
+				day.date,
+				routinesToOffer({
+					date: day.date,
+					today,
+					...(recorded !== undefined ? { recorded } : {}),
+					routines: $routines$.routines,
+					blocks: day.blocks,
+					active: $active$,
+				}),
+			);
+		}
+		return out;
+	});
+
+	// The big arrows walk whole windows, so the next window starts the day after
+	// this one ends: nothing is skipped and nothing is shown twice. The small
+	// arrows move it a day. Walking back onto the default window is the same as
+	// "Today", so the button goes away again.
+	const windowStepLabel = $derived(`${windowSize} days`);
+	function stepWindow(dir: 1 | -1, big: boolean) {
+		const next = stepAnchor(anchor, big ? windowSize : 1, dir);
+		pinnedAnchor = next === shiftDays(todayISO(), -before) ? null : next;
+		closeAssocPicker();
+		closeBlockPicker();
+	}
+
+	// Touch has no Shift or Ctrl/Cmd to select several blocks: the header's
+	// Select toggle stands in (spec decision 138). Off clears every column.
+	let selectMode = $state(false);
+	function toggleSelectMode() {
+		selectMode = !selectMode;
+		if (!selectMode) for (const date of dates) columns[date]?.clearSelection();
+	}
+	function deleteSelectedEverywhere() {
+		for (const date of dates) {
+			if (columns[date]?.hasSelection()) columns[date].deleteSelection();
+		}
+	}
+
+	// A sideways swipe on the days (actions/swipeDays.ts): one day at a time.
+	function swipeBy(days: number) {
+		pinnedAnchor = shiftDays(anchor, days);
+		closeAssocPicker();
+		closeBlockPicker();
+	}
+
+	function goToday() {
+		pinnedAnchor = null;
+		closeAssocPicker();
+		closeBlockPicker();
+	}
+
+	// ── Follow the Grid ──
+	// With "Follow the grid" on, a day you act on in the Grid that's outside
+	// this window brings the window to it, placed where today sits in the
+	// default window. A day already in view leaves the window alone. A request
+	// already waiting when the view opened is skipped, and never mid-drag.
+	let lastFocusNonce: number | null = null;
+	function handleFocus(req: FocusRequest | null) {
+		const initial = lastFocusNonce === null;
+		if (!req || req.nonce === lastFocusNonce) {
+			lastFocusNonce ??= 0;
+			return;
+		}
+		lastFocusNonce = req.nonce;
+		if (initial || !settings.followGrid || dragFromDate !== null) return;
+		if (dates.includes(req.date)) return;
+		pinnedAnchor = shiftDays(req.date, -before);
+		closeAssocPicker();
+		closeBlockPicker();
+	}
+
+	function jumpTo(date: ISODate) {
+		// Place the jumped-to date where today sits in the default window.
+		pinnedAnchor = shiftDays(date, -before);
+		showCalendar = false;
+		closeAssocPicker();
+		closeBlockPicker();
+	}
+
+	const rangeLabel = $derived.by(() => {
+		const first = dateFromISO(dates[0]!).toLocaleDateString(undefined, {
+			month: "short",
+			day: "numeric",
+		});
+		const last = dateFromISO(dates[dates.length - 1]!).toLocaleDateString(
+			undefined,
+			{ month: "short", day: "numeric" },
+		);
+		return `${first} – ${last}`;
+	});
+
+	// A date card's two lines: an uppercase day-of-week label over the day number
+	// (Holos-style header), stacked in the column head markup.
+	function dowLabel(date: ISODate): string {
+		return dateFromISO(date)
+			.toLocaleDateString(undefined, { weekday: "short" })
+			.toUpperCase();
+	}
+	function dayNumber(date: ISODate): string {
+		return dateFromISO(date).toLocaleDateString(undefined, { day: "numeric" });
+	}
+	function isToday(date: ISODate): boolean {
+		return date === todayISO();
+	}
+
+	// ── Calendar + hour controls (mirrors DayView's header popovers) ──
+	let showCalendar = $state(false);
+	let calendarValue = $state<Date>(dateFromISO(todayISO()));
+	let dateNavRef = $state<HTMLDivElement>();
+
+	let showControls = $state(false);
+	let controlsRef = $state<HTMLDivElement>();
+
+	// Each returns the value now in effect, for commitNumber (a cleared field
+	// keeps the current value).
+	function setStartHour(value: number): number {
+		if (Number.isNaN(value)) return geo.startHour;
+		const v = Math.max(0, Math.min(23, Math.floor(value)));
+		updateSettings((s) => {
+			s.timelineStartHour = v;
+			if (s.timelineEndHour <= v) s.timelineEndHour = v + 1;
+		});
+		return v;
+	}
+	function setEndHour(value: number): number {
+		if (Number.isNaN(value)) return geo.endHour;
+		const v = Math.max(1, Math.min(24, Math.floor(value)));
+		updateSettings((s) => {
+			s.timelineEndHour = v;
+			if (s.timelineStartHour >= v) s.timelineStartHour = v - 1;
+		});
+		return v;
+	}
+	function setHourHeight(value: number): number {
+		if (Number.isNaN(value)) return geo.hourHeight;
+		const v = Math.max(20, Math.min(240, Math.floor(value)));
+		updateSettings((s) => {
+			s.timelineHourHeight = v;
+		});
+		return v;
+	}
+	function setDaysBefore(value: number): number {
+		if (Number.isNaN(value)) return before;
+		const v = clampSpan(value);
+		// Choosing a span means not fitting to the width.
+		updateSettings((s) => {
+			s.weekDaysBefore = v;
+			s.fitDaysToWidth = false;
+		});
+		return v;
+	}
+	function setDaysAfter(value: number): number {
+		if (Number.isNaN(value)) return after;
+		const v = clampSpan(value);
+		updateSettings((s) => {
+			s.weekDaysAfter = v;
+			s.fitDaysToWidth = false;
+		});
+		return v;
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (showControls && controlsRef && !controlsRef.contains(event.target as Node)) {
+			showControls = false;
+		}
+		if (showCalendar && dateNavRef && !dateNavRef.contains(event.target as Node)) {
+			showCalendar = false;
+		}
+	}
+
+	// ── Column registry (for pointer forwarding + cross-day commits) ──
+	// Svelte 5: `bind:this` on each DayColumn gives us its exported methods.
+	let columns = $state<Record<string, DayColumnHandle | undefined>>({});
+	let columnEls = $state<Record<string, HTMLDivElement>>({});
+
+	// Per-date unscheduled items pushed up from each DayColumn via callback.
+	let unscheduledByDate = $state<Record<string, UnscheduledItem[]>>({});
+	let unscheduledOpen = $state(true);
+
+	function onUnscheduledChange(date: ISODate, items: UnscheduledItem[]) {
+		unscheduledByDate = { ...unscheduledByDate, [date]: items };
+	}
+
+	const totalUnscheduled = $derived(
+		dates.reduce((n, d) => n + (unscheduledByDate[d]?.length ?? 0), 0),
+	);
+
+	// ── Resurfaced backlog nudges ──
+	// A backlog entry with a resurface date surfaces on exactly one day; the Day
+	// and Grid views already show those as nudges, and the week strip mirrors them
+	// per column. They live in the backlog file until the arrow inserts them.
+	let backlogEntries = $state<BacklogEntry[]>([]);
+
+	const surfacedByDate = $derived.by(() => {
+		const today = todayISO();
+		const map: Record<string, BacklogEntry[]> = {};
+		for (const date of dates) map[date] = surfacedOn(backlogEntries, date, today);
+		return map;
+	});
+
+	// Each day's Inbox badge — resurfacing backlog entries, plus
+	// yesterday's open tasks on today — grouped by association.
+	// svelte-ignore state_referenced_locally
+	const left$ = todayLeftovers(index, leftoverActions);
+	const leftFrom = $derived($left$ ? dayLabel($left$.from.date) : "");
+	function leftoversOn(date: ISODate): Leftover[] {
+		return $left$ && $left$.today === date ? $left$.items : [];
+	}
+	function inboxCountFor(date: ISODate): number {
+		return (surfacedByDate[date]?.length ?? 0) + leftoversOn(date).length;
+	}
+	function inboxGroupsFor(date: ISODate) {
+		return groupByAssoc(surfacedByDate[date] ?? [], (e) => e.assoc, resolve);
+	}
+	function settleLeftover(l: Leftover, status: "x" | "-") {
+		const day = $left$?.from;
+		if (!day) return;
+		index.applyDayEdit(day.date, day.path, setTaskStatus(day.blocks, l.owner, l.task, status));
+	}
+	function bringLeftover(l: Leftover) {
+		if ($left$) leftoverActions.bring($left$.today, $left$.from.date, [l.task.source]);
+	}
+	function bringAllLeftovers() {
+		if ($left$) leftoverActions.bring($left$.today, $left$.from.date);
+	}
+	function leaveLeftovers() {
+		if ($left$) leftoverActions.leave($left$.today, $left$.from.date);
+	}
+	// A popup group's "+": a typed task in that day's Unscheduled, filed under
+	// the group.
+	async function addUnscheduled(
+		date: ISODate,
+		text: string,
+		assoc: Association | undefined,
+	) {
+		const col = columns[date];
+		if (!col) return;
+		const path = col.currentPath() ?? (await col.ensurePath());
+		index.applyDayEdit(
+			date,
+			path,
+			addTaskToUnscheduled(col.currentBlocks(), path, text, assoc, nextDraftLine()),
+		);
+	}
+	// Each column's Unscheduled tasks, grouped by association.
+	function unscheduledGroupsFor(date: ISODate) {
+		return groupByAssoc(unscheduledByDate[date] ?? [], (i) => i.task.owner, resolve);
+	}
+
+	function onNudgeInsert(entry: BacklogEntry, date: ISODate) {
+		void insertEntry(index, entry, date);
+	}
+	function onNudgeResurfaceTomorrow(entry: BacklogEntry) {
+		resurfaceTomorrow(index, backlogEntries, entry);
+	}
+
+	// Resurface-at datepicker, owned here (not by a column) so it isn't clipped.
+	let resurfaceEntry = $state<BacklogEntry | null>(null);
+	let resurfaceAnchor = $state<DOMRect | null>(null);
+	let resurfaceValue = $state<Date>(dateFromISO(todayISO()));
+	// Placed off-screen until measured so it never flashes at the anchor before
+	// being clamped into the viewport.
+	let resurfacePopupEl = $state<HTMLElement>();
+	let resurfaceStyle = $state("left: -9999px; top: -9999px;");
+	function onNudgeResurfaceAt(entry: BacklogEntry, anchor: DOMRect) {
+		resurfaceStyle = "left: -9999px; top: -9999px;"; // hide until measured
+		resurfaceEntry = entry;
+		resurfaceAnchor = anchor;
+		resurfaceValue = dateFromISO(entry.resurface ?? todayISO());
+	}
+	function closeResurfaceAt() {
+		resurfaceEntry = null;
+		resurfaceAnchor = null;
+	}
+	$effect(() => {
+		const el = resurfacePopupEl;
+		const anchor = resurfaceAnchor;
+		if (!el || !anchor) return;
+		resurfaceStyle = placeUnderAnchor(anchor, {
+			width: el.offsetWidth,
+			height: el.offsetHeight,
+		});
+	});
+	function onResurfaceAtSelect(picked: Date) {
+		const entry = resurfaceEntry;
+		closeResurfaceAt();
+		if (entry) setResurface(index, backlogEntries, entry, isoFromDate(picked));
+	}
+
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			},
+		};
+	}
+
+	// The column a live gesture began on, and the block it grabbed (single-block
+	// move only). Non-null only during a potential cross-day drag.
+	let dragFromDate = $state<ISODate | null>(null);
+	let dragBlock = $state<Block | null>(null);
+	// The date the pointer is currently hovering (drop target highlight).
+	let hoverDate = $state<ISODate | null>(null);
+	// Where the moved block would land on another day, for that column to draw.
+	let incoming = $state<IncomingBlock | null>(null);
+
+	// The column that most recently had a gesture/selection, so keyboard delete
+	// targets the right day.
+	let focusedDate = $state<ISODate | null>(null);
+
+	// A column reports a single-block move began: remember it as a cross-day
+	// candidate and start highlighting drop targets.
+	function onCrossDayGrab(date: ISODate, block: Block, _event: PointerEvent) {
+		dragFromDate = date;
+		dragBlock = block;
+		hoverDate = date;
+		focusedDate = date;
+	}
+
+	// Which column's canvas is under this X? Returns its date or null.
+	function columnAt(clientX: number, clientY: number): ISODate | null {
+		for (const date of dates) {
+			const el = columnEls[date];
+			if (!el) continue;
+			const r = el.getBoundingClientRect();
+			if (
+				clientX >= r.left &&
+				clientX <= r.right &&
+				clientY >= r.top &&
+				clientY <= r.bottom
+			) {
+				return date;
+			}
+		}
+		return null;
+	}
+
+	function onWindowPointerMove(event: PointerEvent) {
+		// Forward to every column; the one owning the live gesture consumes it.
+		let handled = false;
+		for (const date of dates) {
+			if (columns[date]?.handlePointerMove(event)) handled = true;
+		}
+		if (handled && dragBlock && dragFromDate) {
+			hoverDate = columnAt(event.clientX, event.clientY);
+			incoming = incomingBlock(
+				dragFromDate,
+				hoverDate,
+				dragBlock,
+				columns[dragFromDate]?.movePreview() ?? null,
+			);
+		}
+	}
+
+	async function onWindowPointerUp(event: PointerEvent) {
+		// Snapshot cross-day intent before columns clear their gesture state.
+		const from = dragFromDate;
+		const grabbed = dragBlock;
+		const dropDate =
+			from && grabbed ? columnAt(event.clientX, event.clientY) : null;
+
+		// Let every column resolve its own pointer-up. The source column returns
+		// the grabbed block + its previewed (vertical) range.
+		let returned: { date: ISODate; block: Block; time: TimeRange } | null =
+			null;
+		for (const date of dates) {
+			const res = columns[date]?.handlePointerUp();
+			if (res) returned = { date, ...res };
+		}
+
+		dragFromDate = null;
+		dragBlock = null;
+		hoverDate = null;
+		incoming = null;
+
+		if (!returned) return;
+
+		// A cross-day drop: the block left `returned.date` and lands on `dropDate`.
+		if (
+			from &&
+			dropDate &&
+			dropDate !== returned.date &&
+			returned.block.source.line === grabbed?.source.line
+		) {
+			await commitCrossDay(returned.date, dropDate, returned.block, returned.time);
+			return;
+		}
+
+		// Stayed in-column: commit the deferred vertical retime.
+		columns[returned.date]?.commitLocalMove(returned.block, returned.time);
+	}
+
+	// CORE-LOGIC boundary call: assemble both days' arrays via the writer's pure
+	// primitive, then commit them atomically through the index. The moved block
+	// keeps its previewed time (its vertical position on the destination day).
+	async function commitCrossDay(
+		fromDate: ISODate,
+		toDate: ISODate,
+		block: Block,
+		time: TimeRange,
+	) {
+		const fromCol = columns[fromDate];
+		const toCol = columns[toDate];
+		if (!fromCol || !toCol) return;
+
+		const fromPath = fromCol.currentPath() ?? (await fromCol.ensurePath());
+		const toPath = toCol.currentPath() ?? (await toCol.ensurePath());
+
+		const { from, to } = moveBlockAcrossDays(
+			fromCol.currentBlocks(),
+			toCol.currentBlocks(),
+			block,
+			toPath,
+			time,
+		);
+
+		// Reflect the removal locally on the source column so its mirror matches
+		// what we're about to persist (the index write is authoritative).
+		fromCol.removeBlockLocally(block);
+
+		index.applyCrossDayMove(fromDate, fromPath, from, toDate, toPath, to);
+	}
+
+	// ── Association picker (shared, week-level) ──
+	type PickerTarget =
+		| { kind: "block"; date: ISODate; block: Block }
+		| { kind: "task"; date: ISODate; block: Block; task: Task };
+
+	let pickerTarget = $state<PickerTarget | null>(null);
+	let pickerAnchor = $state<DOMRect | null>(null);
+
+	const pickerCurrent = $derived.by(() => {
+		if (!pickerTarget) return undefined;
+		return pickerTarget.kind === "block"
+			? pickerTarget.block.assoc
+			: pickerTarget.task.assoc;
+	});
+
+	function openBlockAssoc(date: ISODate, block: Block, anchor: DOMRect) {
+		pickerTarget = { kind: "block", date, block };
+		pickerAnchor = anchor;
+	}
+	function openTaskAssoc(date: ISODate, block: Block, task: Task, anchor: DOMRect) {
+		pickerTarget = { kind: "task", date, block, task };
+		pickerAnchor = anchor;
+	}
+	function closeAssocPicker() {
+		pickerTarget = null;
+		pickerAnchor = null;
+	}
+	function onPickAssoc(assoc: Association | null) {
+		if (pickerTarget?.kind === "block") {
+			columns[pickerTarget.date]?.applyBlockAssoc(pickerTarget.block, assoc);
+		} else if (pickerTarget?.kind === "task") {
+			columns[pickerTarget.date]?.applyTaskAssoc(
+				pickerTarget.block,
+				pickerTarget.task,
+				assoc,
+			);
+		}
+		closeAssocPicker();
+	}
+
+	// ── Block picker (nest-under-block), shared/week-level ──
+	// A column forwards a nest request here so the picker escapes its clip. The
+	// pick routes back to the owning column's `applyNest`.
+	let blockPickerTarget = $state<{
+		date: ISODate;
+		owner: Block;
+		task: Task;
+	} | null>(null);
+	let blockPickerAnchor = $state<DOMRect | null>(null);
+
+	// Options are the target column's blocks, minus the task's current owner.
+	const blockPickerOptions = $derived.by<BlockOption[]>(() => {
+		if (!blockPickerTarget) return [];
+		const col = columns[blockPickerTarget.date];
+		if (!col) return [];
+		return blockOptions(
+			col.currentBlocksArray(),
+			blockPickerTarget.owner.source.line,
+		);
+	});
+
+	function openBlockPicker(
+		date: ISODate,
+		owner: Block,
+		task: Task,
+		anchor: DOMRect,
+	) {
+		blockPickerTarget = { date, owner, task };
+		blockPickerAnchor = anchor;
+	}
+	function closeBlockPicker() {
+		blockPickerTarget = null;
+		blockPickerAnchor = null;
+	}
+	function onPickBlock(option: BlockOption) {
+		if (blockPickerTarget) {
+			columns[blockPickerTarget.date]?.applyNest(
+				blockPickerTarget.owner,
+				blockPickerTarget.task,
+				option.block,
+			);
+		}
+		closeBlockPicker();
+	}
+
+	// ── Keyboard: delete the focused column's selection ──
+	function isEditableTarget(target: EventTarget | null): boolean {
+		if (!(target instanceof HTMLElement)) return false;
+		const tag = target.tagName;
+		return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
+	}
+	function onKeyDown(event: KeyboardEvent) {
+		if (isEditableTarget(event.target)) return;
+		const key = event.key.toLowerCase();
+		if (key === "x" || key === "delete" || key === "backspace") {
+			const date = focusedDate;
+			if (!date || !columns[date]?.hasSelection()) return;
+			event.preventDefault();
+			columns[date].deleteSelection();
+		} else if (key === "escape") {
+			// Cancel any live task drag first, then clear selections.
+			for (const date of dates) columns[date]?.cancelTaskDrag();
+			for (const date of dates) columns[date]?.clearSelection();
+		}
+	}
+
+	// Track which column was last pressed, for keyboard delete targeting.
+	function markFocused(date: ISODate) {
+		focusedDate = date;
+	}
+
+	function onCalendarSelect(picked: Date) {
+		jumpTo(isoFromDate(picked));
+	}
+
+	// The timeline scroll reserves a stable scrollbar gutter so its columns don't
+	// resize when the scrollbar toggles. The header + unscheduled strips sit
+	// outside that scroll, so to stay aligned they must reserve the same trailing
+	// width — the actual scrollbar width, measured once and published as a CSS var
+	// on the root. `stable` guarantees the gutter is always present, so the columns
+	// underneath always line up with the reserve above.
+	let viewEl = $state<HTMLDivElement>();
+	function measureScrollbar(el: HTMLElement) {
+		const probe = createDiv();
+		probe.setCssProps({
+			position: "absolute",
+			top: "-9999px",
+			width: "100px",
+			height: "100px",
+			overflow: "scroll",
+		});
+		el.appendChild(probe);
+		const width = probe.offsetWidth - probe.clientWidth;
+		probe.remove();
+		el.style.setProperty("--wv-scrollbar", `${width}px`);
+	}
+
+	onMount(() => {
+		if (viewEl) measureScrollbar(viewEl);
+		const unsubscribeResolver = index.resolver().subscribe((r) => {
+			resolve = r;
+		});
+		const unsubscribeBacklog = index.backlog().subscribe((e) => {
+			backlogEntries = e;
+		});
+		const unsubscribeHover = links.hover$.subscribe((h) => {
+			hovered = h;
+		});
+		const unsubscribeDrag = links.drag$.subscribe((p) => {
+			dragPreview = p;
+		});
+		const unsubscribeFocus = links.focus$.subscribe((req) => handleFocus(req));
+		const move = (e: PointerEvent) => onWindowPointerMove(e);
+		const up = (e: PointerEvent) => void onWindowPointerUp(e);
+		// A cancelled pointer (a touch that became a scroll) or a lost window
+		// ends every column's gesture without writing, cross-day intent included.
+		const cancel = () => {
+			for (const date of dates) columns[date]?.cancelPointer();
+			dragFromDate = null;
+			dragBlock = null;
+			hoverDate = null;
+			incoming = null;
+		};
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", up);
+		window.addEventListener("pointercancel", cancel);
+		window.addEventListener("blur", cancel);
+		return () => {
+			unsubscribeResolver();
+			unsubscribeBacklog();
+			unsubscribeHover();
+			unsubscribeDrag();
+			unsubscribeFocus();
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", up);
+			window.removeEventListener("pointercancel", cancel);
+			window.removeEventListener("blur", cancel);
+		};
+	});
+
+	void notePathForDate;
+	void ensureNoteForDate;
+</script>
+
+<!-- The lists behind each day's header badges. -->
+{#snippet listIcon()}
+	<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></svg>
+{/snippet}
+{#snippet inboxIcon()}
+	<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+{/snippet}
+{#snippet unscheduledList(date: ISODate)}
+		{#each unscheduledGroupsFor(date) as group (group.key)}
+			<AssocGroup
+				assoc={group.assoc}
+				resolved={group.resolved}
+				count={group.items.length}
+				onNavigate={(assoc: Association) => navigateToAssociation(app, resolve(assoc))}
+				onAddText={(text: string) => addUnscheduled(date, text, group.assoc)}
+				addLabel="Add a task here"
+			>
+		{#each group.items as { block, task } (task.source.line)}
+			{@const r = task.owner ? columns[date]?.resolveAssoc(task.owner) : undefined}
+			<TaskRow
+				{task}
+				color={r?.color}
+				association={task.assoc ?? task.owner}
+				inherited={task.assoc === undefined && task.owner !== undefined}
+				showAssociation={false}
+				resolved={r}
+				onNavigate={() => task.owner && columns[date]?.navigateAssoc(task.owner)}
+				onEditAssoc={(rect: DOMRect) => columns[date]?.editTaskAssoc(block, task, rect)}
+				onNest={(rect: DOMRect) => columns[date]?.nestTask(block, task, rect)}
+				onMoveToBacklog={() => columns[date]?.moveToBacklog(block, task)}
+				onRepeat={() => requestRepeat(task, block)}
+				onSetStatus={(_t: Task, status: TaskStatus) => columns[date]?.setTaskStatus(block, task, status)}
+				onSetText={(_t: Task, text: string) => columns[date]?.setTaskText(block, task, text)}
+				onDelete={(_t) => columns[date]?.deleteTask(block, task)}
+				onGrab={(e: PointerEvent) => columns[date]?.grabTask(block, task, e)}
+				highlight={stripLinked(task) ? "task" : null}
+				onHoverChange={(on: boolean) => stripHover(task, on)}
+			/>
+		{/each}
+			</AssocGroup>
+		{/each}
+{/snippet}
+{#snippet inboxList(date: ISODate)}
+	{@const lefts = leftoversOn(date)}
+	{#if lefts.length > 0}
+		<div class="inbox-left-head">
+			<span>{$left$ ? leftOpenLabel($left$.from.date, $left$.today) : ""}</span>
+			<span class="inbox-left-spacer"></span>
+			<LeftoverButtons onLeave={leaveLeftovers} onBringAll={bringAllLeftovers} />
+		</div>
+		{#each lefts as l (l.task.source.line)}
+			{@const la = l.task.assoc ?? l.owner.assoc}
+			<LeftoverTask
+				task={l.task}
+				resolved={la ? resolve(la) : undefined}
+				fromLabel={leftFrom}
+				onDone={() => settleLeftover(l, "x")}
+				onCancel={() => settleLeftover(l, "-")}
+				onBring={() => bringLeftover(l)}
+			/>
+		{/each}
+	{/if}
+	{#each inboxGroupsFor(date) as group (group.key)}
+		<AssocGroup
+			assoc={group.assoc}
+			resolved={group.resolved}
+			count={group.items.length}
+			onNavigate={(assoc: Association) => navigateToAssociation(app, resolve(assoc))}
+		>
+		{#each group.items as entry (entry.source.line)}
+			<BacklogNudge
+				{entry}
+				resolved={entry.assoc ? resolve(entry.assoc) : undefined}
+				showAssociation={false}
+				onInsert={(e: BacklogEntry) => onNudgeInsert(e, date)}
+				onResurfaceTomorrow={onNudgeResurfaceTomorrow}
+				onResurfaceAt={onNudgeResurfaceAt}
+				onNavigate={(assoc: Association) => navigateToAssociation(app, resolve(assoc))}
+			/>
+		{/each}
+		</AssocGroup>
+	{/each}
+{/snippet}
+
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="week-view" tabindex="-1" bind:this={viewEl} onclick={handleClickOutside} onkeydown={onKeyDown}>
+	<div class="week-header" use:intoViewHeader={viewHeader}>
+		<div class="day-nav" bind:this={dateNavRef}>
+			<StepArrows big={windowStepLabel} small="a day" onstep={stepWindow}>
+				<button
+					class="day-date"
+					title="Click to pick a date"
+					onclick={(e) => {
+						e.stopPropagation();
+						showCalendar = !showCalendar;
+					}}
+				>
+					{rangeLabel}
+				</button>
+			</StepArrows>
+
+			{#if !atDefault}
+				<button class="today-btn" onclick={(e) => { e.stopPropagation(); goToday(); }}>
+					Today
+				</button>
+			{/if}
+
+			{#if showCalendar}
+				<div class="calendar-popup">
+					<Datepicker inline bind:value={calendarValue} onselect={onCalendarSelect} />
+				</div>
+			{/if}
+		</div>
+
+		<span class="week-header-spacer"></span>
+		<span class="day-range-label">
+			{String(geo.startHour).padStart(2, "0")}:00–{String(geo.endHour).padStart(2, "0")}:00
+		</span>
+		<div class="controls-wrap" bind:this={controlsRef}>
+			<button
+				class="icon-btn"
+				onclick={(e) => { e.stopPropagation(); showControls = !showControls; }}
+				aria-label="Timeline settings"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+			</button>
+
+			{#if showControls}
+				<Popover
+					class="controls-popup"
+					placement="anchored"
+					padding="l"
+					gap="m"
+					style="top: calc(100% + 6px); right: 0; min-width: 170px;"
+				>
+					<!-- Touch only (pointer: coarse): select several blocks by tapping
+					     them, where Shift and Ctrl/Cmd don't exist (spec decision 138). -->
+					<label class="controls-field controls-touch-only">
+						<span class="controls-label">Select several blocks</span>
+						<input
+							type="checkbox"
+							checked={selectMode}
+							onchange={() => {
+								toggleSelectMode();
+								showControls = false;
+							}}
+						/>
+					</label>
+					<label class="controls-field">
+						<span class="controls-label">Start hour</span>
+						<input type="number" class="controls-input" min="0" max="23" value={geo.startHour} onchange={(e) => commitNumber(e.currentTarget, setStartHour)} />
+					</label>
+					<label class="controls-field">
+						<span class="controls-label">End hour</span>
+						<input type="number" class="controls-input" min="1" max="24" value={geo.endHour} onchange={(e) => commitNumber(e.currentTarget, setEndHour)} />
+					</label>
+					<label class="controls-field">
+						<span class="controls-label">Hour height</span>
+						<input type="number" class="controls-input" min="20" max="240" step="5" value={geo.hourHeight} onchange={(e) => commitNumber(e.currentTarget, setHourHeight)} />
+					</label>
+					<label class="controls-field">
+						<span class="controls-label">Days before today</span>
+						<input type="number" class="controls-input" min="1" max="7" value={before} onchange={(e) => commitNumber(e.currentTarget, setDaysBefore)} />
+					</label>
+					<label class="controls-field">
+						<span class="controls-label">Days after today</span>
+						<input type="number" class="controls-input" min="1" max="7" value={after} onchange={(e) => commitNumber(e.currentTarget, setDaysAfter)} />
+					</label>
+				</Popover>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Select mode's bar, under the header while it's on (touch only). -->
+	{#if selectMode}
+		<div class="select-bar">
+			<span class="select-bar-label">Tap blocks to select them</span>
+			<IconButton label="Delete selected blocks" icon="trash-2" onclick={deleteSelectedEverywhere} />
+			<button class="select-bar-done" onclick={toggleSelectMode}>Done</button>
+		</div>
+	{/if}
+
+	<!-- Column titles row, aligned with the columns below (offset by the gutter). -->
+	<div class="week-colheads">
+		<HourGutter {geo} corner />
+		{#each dates as date (date)}
+			{@const offered = routinesByDate.get(date)}
+			{@const usCount = unscheduledByDate[date]?.length ?? 0}
+			{@const inCount = inboxCountFor(date)}
+			<DateCard
+				label={dowLabel(date)}
+				value={dayNumber(date)}
+				today={isToday(date)}
+				title="Ctrl+click to open the daily note"
+				onclick={(e: MouseEvent) => {
+					e.stopPropagation();
+					if (e.ctrlKey || e.metaKey) columns[date]?.openNote();
+				}}
+				onmenu={(e: MouseEvent) => showDayMenu(e, date, routineActions, app)}
+			>
+				{#snippet badges()}
+				<!-- The day's lists as badges on its header — Unscheduled,
+				     Inbox (yesterday's open tasks on today, and resurfacing entries),
+				     routines — instead of strips that push every column down. -->
+				{#if usCount > 0 || inCount > 0 || (offered && offered.count > 0)}
+						{#if usCount > 0}
+							<HeaderBadge
+								title="Unscheduled"
+								dateLabel={`${dowLabel(date)} ${dayNumber(date)}`}
+								count={usCount}
+								icon={listIcon}
+								dragging={dragPreview !== null}
+							>
+								{@render unscheduledList(date)}
+							</HeaderBadge>
+						{/if}
+						{#if inCount > 0}
+							<HeaderBadge
+								title="Inbox"
+								dateLabel={`${dowLabel(date)} ${dayNumber(date)}`}
+								count={inCount}
+								icon={inboxIcon}
+								tone={leftoversOn(date).length > 0 ? "warn" : "neutral"}
+								dragging={dragPreview !== null}
+							>
+								{@render inboxList(date)}
+							</HeaderBadge>
+						{/if}
+						{#if offered && offered.count > 0}
+							<RoutinesAlert
+								list={offered}
+								variant="pill"
+								label={dayLabel(date)}
+								showAddAll={!settings.autoApplyRoutines}
+								onAdd={(rs: Routine[]) => routineActions.insert(date, rs)}
+								onAddAll={() => routineActions.addAll(date)}
+							/>
+						{/if}
+				{/if}
+				{/snippet}
+			</DateCard>
+		{/each}
+	</div>
+
+	<!-- Shown during any task drag too, even when empty: dropping on a day's
+	     column takes a task out of its block. -->
+	<!-- The strip only shows during a task drag now, as the drop
+	     target that unschedules; otherwise each day's header badge holds it. -->
+	{#if dragPreview}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="week-unscheduled">
+			<div
+				class="week-us-header"
+				class:open={unscheduledOpen}
+				onclick={() => (unscheduledOpen = !unscheduledOpen)}
+			>
+				<div class="week-us-gutter-spacer">
+					<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="us-chevron"><path d="m6 9 6 6 6-6"/></svg>
+					<span>Unscheduled</span>
+					<span class="kairos-count">{totalUnscheduled}</span>
+				</div>
+				{#each dates as date (date)}
+					<div
+						class="week-us-head-cell"
+						class:drop-target={inboxDropDate() === date}
+						data-unscheduled-date={date}
+					>
+						<!-- Each day's "+", as on the Grid's Unscheduled header.
+						     Unscheduled has no other actions. -->
+						<button
+							class="week-us-add"
+							aria-label="Add task to Unscheduled"
+							use:tooltip={"Add task to Unscheduled"}
+							onclick={(e) => {
+								e.stopPropagation();
+								void columns[date]?.addUnscheduledTask();
+							}}
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+						</button>
+					</div>
+				{/each}
+			</div>
+			{#if unscheduledOpen}
+				<div class="week-us-body">
+					<div class="week-us-gutter-spacer"></div>
+					{#each dates as date (date)}
+						<div
+							class="week-us-col"
+							class:today={isToday(date)}
+							class:drop-target={inboxDropDate() === date}
+							data-unscheduled-date={date}
+						>
+							{@render unscheduledList(date)}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<div
+		class="week-scroll"
+		data-drag-scroll
+		bind:clientWidth={scrollWidth}
+		use:swipeDays={{ onSwipe: swipeBy, busy: () => dragBlock !== null || dragPreview !== null || holdingDrag() }}
+	>
+		<div class="week-body">
+			<!-- Shared hour gutter + grid lines span the full column strip. -->
+			<HourGutter {geo} />
+
+			<div class="week-columns">
+				<!-- Grid lines drawn once across all columns, behind them. -->
+				<HourLines {geo} />
+
+				{#each dates as date (date)}
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div
+						class="week-col"
+						class:today={isToday(date)}
+						class:drop-target={hoverDate === date && dragFromDate !== null && dragFromDate !== date}
+						class:drag-source={dragFromDate === date}
+						bind:this={columnEls[date]}
+						onpointerdown={() => markFocused(date)}
+					>
+						<DayColumn
+							bind:this={columns[date]}
+							{selectMode}
+							{app}
+							{index}
+							{date}
+							{geo}
+							{resolve}
+							onEditAssoc={openBlockAssoc}
+							onEditTaskAssoc={openTaskAssoc}
+							onNestTask={openBlockPicker}
+							backlogPath={settings.backlogPath}
+							{onCrossDayGrab}
+							askAssocOnCreate={settings.askAssocOnBlockCreate}
+							dropBlockTitle={settings.dropBlockTitle}
+							{incoming}
+							leaving={incoming && dragFromDate === date ? dragBlock : null}
+							showUnscheduled={false}
+							{onUnscheduledChange}
+							{links}
+						/>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+</div>
+
+{#if pickerTarget && pickerAnchor}
+	<AssociationPicker
+		options={index.associationOptions()}
+		create={(kind: Association["kind"], name: string) => createAssociation(index, kind, name)}
+		current={pickerCurrent}
+		anchor={pickerAnchor}
+		onPick={onPickAssoc}
+		onClose={closeAssocPicker}
+	/>
+{/if}
+
+{#if resurfaceEntry && resurfaceAnchor}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		class="resurface-popup"
+		use:portal
+		bind:this={resurfacePopupEl}
+		style={resurfaceStyle}
+		onclick={(e) => e.stopPropagation()}
+	>
+		<Datepicker inline bind:value={resurfaceValue} onselect={onResurfaceAtSelect} />
+	</div>
+{/if}
+
+{#if blockPickerTarget && blockPickerAnchor}
+	<BlockPicker
+		colorOf={(o: BlockOption) => (o.block.assoc ? resolve(o.block.assoc).color : undefined)}
+		options={blockPickerOptions}
+		anchor={blockPickerAnchor}
+		onPick={onPickBlock}
+		onClose={closeBlockPicker}
+	/>
+{/if}
+
+<style>
+	.week-view {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.week-header {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 10px 6px;
+		flex-shrink: 0;
+	}
+
+	.day-nav {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.day-date {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-normal);
+		font-variant-numeric: tabular-nums;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 6px;
+		padding: 3px 8px;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.day-date:hover {
+		background: var(--background-modifier-hover);
+	}
+
+	.today-btn {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--text-muted);
+		background: var(--background-primary-alt);
+		border: 1px solid var(--background-modifier-border);
+		border-radius: 6px;
+		padding: 3px 8px;
+		cursor: pointer;
+	}
+
+	.today-btn:hover {
+		background: var(--background-modifier-hover);
+		color: var(--text-normal);
+	}
+
+	.calendar-popup {
+		position: absolute;
+		top: calc(100% + 6px);
+		left: 0;
+		z-index: 100;
+	}
+
+	.week-header-spacer {
+		flex: 1;
+	}
+
+	.day-range-label {
+		font-size: 11px;
+		color: var(--text-faint);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.controls-wrap {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.icon-btn {
+		border: 1px solid var(--background-modifier-border);
+		border-radius: 6px;
+		background: var(--background-primary-alt);
+		color: var(--text-muted);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 26px;
+		width: 26px;
+		flex-shrink: 0;
+	}
+
+	.icon-btn:hover {
+		background: var(--background-modifier-hover);
+		color: var(--text-normal);
+	}
+
+	.icon-btn svg {
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
+	}
+
+	.controls-field {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	.controls-label {
+		font-size: 12px;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	.controls-input {
+		width: 56px;
+		padding: 3px 6px;
+		border: 1px solid var(--background-modifier-border);
+		border-radius: 4px;
+		background: var(--background-primary-alt);
+		color: var(--text-normal);
+		font-size: 12px;
+		text-align: center;
+	}
+
+	/* ── Column heads ── */
+	/* The right padding reserves the timeline scrollbar's width (measured into
+	   --wv-scrollbar) on top of the base 10px, so these columns line up with the
+	   scroll area below whether or not its scrollbar is showing. */
+	.week-colheads {
+		display: flex;
+		flex-shrink: 0;
+		padding: 0 calc(10px + var(--wv-scrollbar, 0px)) 0 10px;
+	}
+
+	/* Touch only: the select-mode switch in the gear popover. On a phone the
+	   hour range is in that popover too, so the header drops it for room. */
+	.controls-touch-only {
+		display: none;
+	}
+	@media (pointer: coarse) {
+		.controls-touch-only {
+			display: flex;
+		}
+		.day-range-label {
+			display: none;
+		}
+		.week-header {
+			gap: 2px;
+			padding-inline: 4px;
+		}
+		/* The date navigator gives way (and scrolls sideways if it must), so
+		   the gear stays in view when "Today" joins the header. */
+		.week-header .day-nav {
+			flex: 0 1 auto;
+			min-width: 0;
+			overflow-x: auto;
+			scrollbar-width: none;
+		}
+		.week-header .controls-wrap {
+			flex-shrink: 0;
+		}
+	}
+	.select-bar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 10px;
+		border-bottom: 1px solid var(--background-modifier-border);
+		background: var(--background-secondary);
+		flex-shrink: 0;
+	}
+	.select-bar-label {
+		flex: 1;
+		color: var(--text-muted);
+	}
+
+	/* The "Left open on …" heading inside a day's Inbox list. */
+	.inbox-left-head {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 2px 4px 2px;
+		font-size: var(--font-ui-smaller);
+		font-weight: var(--font-semibold);
+		color: var(--color-orange);
+	}
+
+	.inbox-left-spacer {
+		flex: 1;
+	}
+
+	/* ── Body ── */
+	.week-scroll {
+		flex: 1;
+		overflow: auto;
+		/* Always reserve the scrollbar gutter so the columns keep a constant width
+		   (and stay aligned with the header/unscheduled strips, which reserve the
+		   same width via --wv-scrollbar) whether or not the scrollbar is showing. */
+		scrollbar-gutter: stable;
+	}
+
+	.week-body {
+		display: flex;
+		padding: 0 10px;
+		min-width: 0;
+	}
+
+	.week-columns {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+		display: flex;
+	}
+
+	.week-col {
+		flex: 1;
+		min-width: 0;
+		position: relative;
+		border-left: 1px solid var(--background-modifier-border);
+	}
+
+	.week-col:first-child {
+		border-left: none;
+	}
+
+	/* Faint tint marking the currently active day's column. */
+	.week-col.today {
+		background: color-mix(in srgb, var(--interactive-accent) 5%, transparent);
+	}
+
+	/* Cross-day drag affordances. */
+	.week-col.drop-target {
+		background: color-mix(in srgb, var(--interactive-accent) 8%, transparent);
+		box-shadow: inset 0 0 0 2px var(--interactive-accent);
+	}
+	.week-col.drop-target :global(.col-canvas) {
+		background: color-mix(in srgb, var(--interactive-accent) 8%, transparent);
+	}
+
+	/* ── Week-level unscheduled strip (above the timeline scroll) ── */
+	.week-unscheduled {
+		flex-shrink: 0;
+		border-bottom: 1px solid var(--background-modifier-border);
+	}
+
+	.week-us-header {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+		user-select: none;
+		/* Match .week-us-body's insets (incl. the reserved scrollbar gutter) so the
+		   header divider cells line up with the body columns and the timeline. */
+		padding: 0 calc(10px + var(--wv-scrollbar, 0px)) 0 10px;
+	}
+
+	.week-us-header:hover {
+		background: var(--background-modifier-hover);
+	}
+
+	.week-us-gutter-spacer {
+		width: 46px;
+		min-width: 46px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 6px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--text-muted);
+		flex-shrink: 0;
+		border-right: 1px solid var(--background-modifier-border);
+	}
+	.week-us-header .week-us-gutter-spacer {
+		border: none;
+	}
+
+	.week-us-header:hover .week-us-gutter-spacer {
+		color: var(--text-normal);
+	}
+
+	.week-us-head-cell {
+		position: relative;
+		align-self: stretch;
+		flex: 1;
+		min-width: 0;
+		border-left: 1px solid var(--background-modifier-border);
+	}
+
+	.week-us-head-cell:first-of-type {
+		border-left: none;
+	}
+
+	/* A day's Unscheduled "+": the Grid's Unscheduled "+" (grid-cell.component.svelte),
+	   shown while pointing at that day's cell. */
+	.week-us-add {
+		position: absolute;
+		top: 50%;
+		right: 4px;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		padding: 0;
+		border: none;
+		border-radius: var(--radius-s);
+		box-shadow: none;
+		color: var(--text-muted);
+		background: transparent;
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+	.week-us-head-cell:hover .week-us-add,
+	.week-us-add:focus-visible {
+		opacity: 0.75;
+	}
+	.week-us-add:hover {
+		opacity: 1;
+		color: var(--text-normal);
+		background: var(--background-modifier-hover);
+		box-shadow: none;
+	}
+	@media (hover: none) {
+		.week-us-add {
+			opacity: 0.45;
+		}
+	}
+
+	.us-chevron {
+		transition: transform 0.15s;
+		transform: rotate(-90deg);
+		flex-shrink: 0;
+	}
+
+	.week-us-header.open .us-chevron {
+		transform: rotate(0deg);
+	}
+
+
+	.week-us-body {
+		display: flex;
+		/* Reserve the timeline scrollbar gutter on the right so these columns stay
+		   aligned with the scroll area below (see .week-colheads). */
+		padding: 0 calc(10px + var(--wv-scrollbar, 0px)) 0 10px;
+	}
+
+	.week-us-col {
+		flex: 1;
+		min-width: 0;
+		/* An empty column keeps a little height, so a drag can still hit it. */
+		min-height: 20px;
+		border-left: 1px solid var(--background-modifier-border);
+	}
+
+	.week-us-col:first-child {
+		border-left: none;
+	}
+
+	.week-us-col.today {
+		background: color-mix(in srgb, var(--interactive-accent) 5%, transparent);
+	}
+
+	/* A live task drag would drop into this day's Unscheduled, out of its block. */
+	.week-us-col.drop-target,
+	.week-us-head-cell.drop-target {
+		box-shadow: inset 0 0 0 2px var(--interactive-accent);
+		background: color-mix(in srgb, var(--interactive-accent) 8%, transparent);
+	}
+
+
+	/* Places the calendar, which draws its own popover panel. */
+	.resurface-popup {
+		position: fixed;
+		z-index: var(--layer-menu);
+	}
+</style>

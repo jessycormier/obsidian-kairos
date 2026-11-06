@@ -67,7 +67,7 @@ textarea.kairos-inline-input:is(:hover, :focus, :focus-visible, :active) {
 	outline: none;
 }
 
-/* ── Domain reorder modal (DomainReorderModal.ts) ── */
+/* ── Domain reorder modal (domain-reorder.modal.ts) ── */
 .kairos-reorder-hint {
 	margin-top: 0;
 	color: var(--text-muted);
@@ -115,7 +115,7 @@ textarea.kairos-inline-input:is(:hover, :focus, :focus-visible, :active) {
 	line-height: 1.4;
 }
 
-/* ── Hover action bars (src/ui/actions/actionZone.ts) ──
+/* ── Hover action bars (src/shared/actions/action-zone.action.ts) ──
    A row's `.kairos-action-bar` (a direct child of the row) shows only while
    the row carries `kairos-actions-awake`, i.e. the mouse is in the corner zone,
    not on any hover. Hidden means inert to the pointer too, so a click on the
@@ -135,7 +135,7 @@ textarea.kairos-inline-input:is(:hover, :focus, :focus-visible, :active) {
 	pointer-events: auto;
 }
 /* Touch has no pointer to track: a first tap selects the row
-   (src/ui/actions/touchSelect.ts), which wakes its bar through the awake class
+   (src/shared/actions/touch-select.action.ts), which wakes its bar through the awake class
    and outlines the row. The bar's buttons, and the ⋯ that opens the row's
    menu, grow to a finger's size. */
 .kairos-touch-selected {
@@ -155,7 +155,7 @@ body .kairos-touch-selected > .kairos-action-bar {
 	z-index: var(--layer-popover);
 }
 /* A selected timeline block has resize handles just outside its edges
-   (TimelineBlock.svelte): its bar rises above the top one. */
+   (timeline-block.component.svelte): its bar rises above the top one. */
 @media (pointer: coarse) {
 	body .tl-block.selected.kairos-touch-selected > .kairos-action-bar {
 		bottom: calc(100% + 28px);
@@ -214,7 +214,7 @@ body .kairos-touch-selected > .kairos-action-bar {
 }
 
 /* ── Vertical action stack (`actionZone` with `layout: "stack"`,
-   src/ui/actions/actionStack.ts) ──
+   src/shared/actions/action-stack.class.ts) ──
    A mouse-woken bar becomes a stack one button wide, `fixed` so the row's
    clipping ancestors can't cut it off. Its corner cell (delete, by CSS
    `order` in each component) sits where the horizontal bar's right end sat;
@@ -273,7 +273,7 @@ body .kairos-action-stack:focus-within > * {
 	}
 }
 
-/* ── Prompt / Confirm modals (modals.ts) ──
+/* ── Prompt / Confirm modals (projects.modal.ts) ──
    Obsidian's own modal parts do the rest: its title, and the button row
    (`modal-button-container`). The text field fills the dialog, and a
    confirmation's message reads like Obsidian's own dialogs. */
@@ -301,7 +301,7 @@ body .kairos-action-stack:focus-within > * {
 	margin-bottom: 0;
 }
 
-/* ── Popover (ui/components/Popover.svelte) ── */
+/* ── Popover (shared/components/popover.component.svelte) ── */
 /* The panel behind header badges, pickers, hover cards and the calendar.
    Obsidian's menu edge, a firmer border and a larger shadow, holds up over
    the views' own dark surfaces. */
@@ -350,7 +350,7 @@ body .kairos-action-stack:focus-within > * {
 	overflow-y: auto;
 }
 
-/* ── Regenerate routines (ui/routines/RegenerateModal.ts) ── */
+/* ── Regenerate routines (features/routines/regenerate.modal.ts) ── */
 .kairos-regen-desc {
 	margin-top: 0;
 	color: var(--text-muted);
@@ -360,7 +360,7 @@ body .kairos-action-stack:focus-within > * {
 	width: min(760px, 92vw);
 }
 
-/* ── Hover card (ui/components/HoverCard.svelte) ── */
+/* ── Hover card (shared/components/hover-card.component.svelte) ── */
 /* A popover in Kairos's own type: a full-height bar in the entity's colour,
    the name in serif, a note and description in the UI font, and a small
    labelled list of facts. Row labels and the Grid's marks open one. */
@@ -434,7 +434,7 @@ body .kairos-action-stack:focus-within > * {
 	color: var(--text-faint);
 }
 
-/* ── Full-text peek for truncated labels (ui/actions/peek.ts) ── */
+/* ── Full-text peek for truncated labels (shared/actions/peek.action.ts) ── */
 /* A popover too (.kairos-popover), made from TypeScript. */
 .kairos-peek {
 	position: fixed;
@@ -457,7 +457,7 @@ body .kairos-action-stack:focus-within > * {
 	font-variant-numeric: tabular-nums;
 }
 
-/* ── Calendar for a status change's date (StatusHistory.svelte) ──
+/* ── Calendar for a status change's date (status-history.component.svelte) ──
    Portaled to <body>: a clear scrim that closes it, and the calendar placed
    under the date that opened it. */
 .kairos-date-scrim {
@@ -590,7 +590,7 @@ body {
 /* ── Drop preview on a timeline (Day view, Week columns) ──
    Where a task released over empty time would land: a new block of the default
    length. Shared because the Day view and each Week column draw it, for drags
-   from any view (viewLinks.ts). Never a hit-test target. */
+   from any view (features/timeline/view-links.store.ts). Never a hit-test target. */
 .kairos-drop-preview {
 	position: absolute;
 	left: 2px;
@@ -696,7 +696,7 @@ body {
 	gap: var(--size-4-2);
 	margin-top: var(--size-4-3);
 }
-/* A phone (tour.ts, dockPopover): a strip across the top of the view, under
+/* A phone (tour.service.ts, dockPopover): a strip across the top of the view, under
    its header, or across the bottom when what it points at is up there. While
    the person types it shrinks to its head line: the progress, the step's name
    and the close button. */
@@ -726,7 +726,7 @@ body {
 	font-size: var(--font-ui-small);
 }
 
-/* ── Header bar in the tab header (src/ui/actions/viewHeader.ts) ──
+/* ── Header bar in the tab header (src/shared/actions/view-header.action.ts) ──
    The Week, Grid and Timeline views move their header bar (date navigator,
    settings) into Obsidian's tab header, in place of the tab's title. The
    bar's popovers drop below the header over the view, so the title container
@@ -757,7 +757,7 @@ body {
 
 /* ── Obsidian's header look for a Kairos header bar (.kairos-header-bar.is-native) ──
    The Week, Grid and Timeline bars get it when they move into the tab header
-   (viewHeader.ts); the Day view's bar has it in the sidebar. It's built from
+   (view-header.action.ts); the Day view's bar has it in the sidebar. It's built from
    Obsidian's own variables, so themes restyle it too: frameless icon buttons
    like the tab's back/forward and ⋯, the date set like the tab title, text
    buttons that only fill on hover, and spacing like Obsidian's header (no gap
@@ -843,7 +843,7 @@ body .kairos-header-bar.is-native .day-range-label {
 /* ── Row label column (Grid and Timeline) ──
    Both views draw the same column: a group accent stripe on the left, then the
    RowLabel, with a project indented under its domain. Shared here so the two
-   can't drift apart again; RowLabel.svelte owns the text sizes. */
+   can't drift apart again; row-label.component.svelte owns the text sizes. */
 body {
 	--kairos-row-label-width: 180px;
 	--kairos-row-label-accent-width: 3px;

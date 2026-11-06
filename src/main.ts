@@ -1,56 +1,32 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { writable } from 'svelte/store';
 import type { Readable, Writable } from 'svelte/store';
-import { DEFAULT_SETTINGS, KairosSettingTab } from './settings';
-import type { KairosSettings } from './settings';
-import type { ISODate } from './types';
-import { KAIROS_VIEW_TYPE, KairosView } from './KairosView';
-import { KAIROS_WEEK_VIEW_TYPE, KairosWeekView } from './KairosWeekView';
-import { KAIROS_GRID_VIEW_TYPE, KairosGridView } from './KairosGridView';
+import { KairosSettingTab } from './features/settings/settings.tab';
+import { DEFAULT_SETTINGS } from './features/settings/settings.model';
+import type { KairosSettings } from './features/settings/settings.interface';
+import type { ISODate } from './core/models/time.type';
+import { KAIROS_VIEW_TYPE, KairosView } from './features/timeline/day.view';
+import { KAIROS_WEEK_VIEW_TYPE, KairosWeekView } from './features/timeline/week.view';
+import { KAIROS_GRID_VIEW_TYPE, KairosGridView } from './features/grid/grid.view';
 import {
 	KAIROS_BACKLOG_VIEW_TYPE,
 	KairosBacklogView,
-} from './KairosBacklogView';
+} from './features/backlog/backlog.view';
 import {
 	KAIROS_PROJECTS_VIEW_TYPE,
 	KairosProjectsView,
-} from './KairosProjectsView';
-import { KAIROS_GANTT_VIEW_TYPE, KairosGanttView } from './KairosGanttView';
-import { IndexAdapter } from './indexAdapter';
-import { openViewMenu } from './ui/views/viewMenu';
-import { DayPreparer } from './routines/dayPrep';
-import { RoutinesStore } from './routines/routinesStore';
-import { registerRoutines } from './routines/register';
-import { RoutinesFeed } from './routines/routinesFeed';
-import { ViewLinks } from './viewLinks';
-import { NEW_TOUR, Tour } from './onboarding/tour';
-import type { TourState } from './onboarding/tour';
-
-/**
- * A request to reveal a specific block in the Day view. Pushed by the Grid view
- * when a scheduled task's block badge is clicked; consumed by the Day view,
- * which navigates to `date` and scrolls the block (identified by its source
- * `line`) into view. `nonce` makes two requests for the same target distinct,
- * so a repeat click still notifies subscribers.
- */
-export interface RevealRequest {
-	date: ISODate;
-	blockLine: number;
-	nonce: number;
-}
-
-/**
- * A filtered-backlog request from the Projects & Domains page. `names` is the
- * allow-list of association names an entry may carry to be shown (the domain
- * plus its child projects for a domain button; just the project for a project
- * button — spec §5, settled rule). `label` names the filter for the header
- * ("Health", "Learn Spanish"). `nonce` makes repeat clicks distinct.
- */
-export interface BacklogFilter {
-	names: string[];
-	label: string;
-	nonce: number;
-}
+} from './features/projects/projects.view';
+import { KAIROS_GANTT_VIEW_TYPE, KairosGanttView } from './features/gantt/gantt.view';
+import { IndexAdapter } from './core/vault-index/index-adapter.service';
+import { openViewMenu } from './core/plugin/view.menu';
+import { DayPreparer } from './features/routines/day-prep.service';
+import { RoutinesStore } from './features/routines/routines.store';
+import { registerRoutines } from './features/routines/routines.register';
+import { RoutinesFeed } from './features/routines/routines-feed.store';
+import { ViewLinks } from './features/timeline/view-links.store';
+import { NEW_TOUR, Tour } from './features/onboarding/tour.service';
+import type { TourState } from './features/onboarding/tour.interface';
+import type { BacklogFilter, RevealRequest } from './core/plugin/plugin-requests.interface';
 
 export default class Kairos extends Plugin {
 	/**
@@ -71,7 +47,7 @@ export default class Kairos extends Plugin {
 	private setSettings!: (s: KairosSettings) => void;
 	/** The live index. Views read from `plugin.index.index`. */
 	indexAdapter!: IndexAdapter;
-	/** Carry-over and routine application (routines/dayPrep.ts). */
+	/** Carry-over and routine application (features/routines/day-prep.service.ts). */
 	dayPreparer!: DayPreparer;
 	/** The parsed routines file and each day's recorded hash, for views. */
 	routinesFeed!: RoutinesFeed;
@@ -100,14 +76,14 @@ export default class Kairos extends Plugin {
 	/**
 	 * The Grid ↔ timeline bridge: focus (the Day view follows the Grid), the live
 	 * task drag every timeline previews, the hovered item, and the Day view's
-	 * date. Stores again, so the leaves stay decoupled. See viewLinks.ts.
+	 * date. Stores again, so the leaves stay decoupled. See features/timeline/view-links.store.ts.
 	 */
 	links = new ViewLinks();
 
 	/**
 	 * The guided tour's progress, saved beside the settings under `tour` but
 	 * kept out of `settings` so it never shows up as a setting. See
-	 * onboarding/tour.ts.
+	 * features/onboarding/tour.service.ts.
 	 */
 	tourState: TourState = NEW_TOUR;
 	tour = new Tour(this);
@@ -134,7 +110,7 @@ export default class Kairos extends Plugin {
 		// Build the index now; cold-start it once the vault is fully loaded so
 		// the seed sees every file (and doesn't race Obsidian's own indexing).
 		this.indexAdapter = new IndexAdapter(this);
-		// Carry-over + routines run when a daily note is created (routines/dayPrep.ts).
+		// Carry-over + routines run when a daily note is created (features/routines/day-prep.service.ts).
 		const preparer = new DayPreparer(this);
 		this.routines = new RoutinesStore(this);
 		this.dayPreparer = preparer;

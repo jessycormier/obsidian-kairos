@@ -1,0 +1,130 @@
+// Kairos markdown serializer
+//
+// The inverse of `core/note/note.parser.ts`: turns a Kairos `Block[]` back into the markdown
+// lines of a daily-note "## Schedule" section.
+//
+// Round-trip invariant:
+//
+//   parseSchedule(serialize(blocks), path)  ≡  blocks
+//
+// where `≡` compares structure only — `SourceRef.line`/`path` are re-derived by
+// the parser from the emitted text, so they are excluded from the comparison.
+//
+// Line grammar produced (mirrors the parser's, metadata right of the title):
+//
+//   block:  "- " [ HH:MM " - " HH:MM " " ] title [ " [" Assoc "]" ] [ " (" tag ")" ]
+//   task:   "\t- [" status "] " text [ " [" Assoc "]" ] [ " (" tag ")" ]
+//   note:   "\t- " text
+//
+// Associations serialize as `[Project]` or `[D:Domain]`. A block has no status,
+// so a block line never carries a checkbox. Nested tasks and notes are
+// indented one tab under their block, each note after the tasks it followed.
+//
+// Fidelity note: the parser strips a trailing `[...]` or `(...)` off any title,
+// so a title/text that itself *ends* with a bracketed or parenthesised token
+// cannot round-trip. That is a parser limitation, not one this serializer can
+// paper over; such titles are emitted verbatim.
+
+import type { Association } from "../models/association.type";
+import type { Block } from "../models/block.interface";
+import type { Task, TaskStatus } from "../models/task.interface";
+import { DEFAULT_HEADING, normalizeHeading } from "./schedule-section.util";
+import { formatTimeRange } from "./note.parser";
+
+// ─── configuration ─────────────────────────────────────────────
+
+const INDENT = "\t"; // one nesting step for tasks under a block
+
+// ─── public API ────────────────────────────────────────────────
+
+/**
+ * Serialize blocks into a full Schedule section, heading included.
+ *
+ * @param blocks   blocks in document order
+ * @param heading  the section heading with hashtags (default "## Schedule")
+ * @returns        markdown text ending with a trailing newline
+ */
+function serialize(blocks: Block[], heading: string = DEFAULT_HEADING): string {
+  const lines: string[] = [normalizeHeading(heading), ""];
+  for (const block of blocks) {
+    for (const line of serializeBlock(block)) lines.push(line);
+  }
+  return lines.join("\n") + "\n";
+}
+
+export { serialize, serializeBlock, serializeTask };
+
+// ─── block / task rendering ────────────────────────────────────
+
+/** Render a block and its tasks as one or more markdown lines. */
+function serializeBlock(block: Block): string[] {
+  const lines: string[] = [];
+
+  // The block line: time, title, association and the trailing paren note
+  // (`metadata`). No checkbox — that belongs to tasks.
+  lines.push(
+    "- " +
+      renderBody({
+        time: block.time,
+        title: block.title,
+        assoc: block.assoc,
+        metadata: block.metadata,
+      }),
+  );
+
+  // Nested tasks and notes, one indent step deeper. A note goes after the
+  // `at` tasks it followed; one past the end goes last.
+  const notes = block.notes ?? [];
+  const notesAt = (i: number) =>
+    notes.filter((n) => Math.min(n.at, block.tasks.length) === i);
+  block.tasks.forEach((task, i) => {
+    for (const note of notesAt(i)) lines.push(INDENT + "- " + note.text);
+    lines.push(INDENT + "- " + serializeTask(task));
+  });
+  for (const note of notesAt(block.tasks.length)) lines.push(INDENT + "- " + note.text);
+
+  return lines;
+}
+
+/** Render a nested task's body (the part after "- "). */
+function serializeTask(task: Task): string {
+  return renderBody({
+    status: task.status,
+    title: task.text,
+    assoc: task.assoc,
+    metadata: task.metadata,
+  });
+}
+
+// ─── body assembly ─────────────────────────────────────────────
+
+interface Body {
+  status?: TaskStatus;
+  time?: { start: number; end: number };
+  title: string;
+  assoc?: Association;
+  metadata?: string;
+}
+
+/**
+ * Assemble the text after the list marker: optional checkbox, optional time
+ * range, title, then trailing metadata in the order the parser peels off
+ * (assoc before the paren note, right-to-left).
+ */
+function renderBody(b: Body): string {
+  let out = "";
+  if (b.status !== undefined) out += `[${b.status}] `;
+  // An end at midnight (1440) writes as "24:00", which reads back as the end
+  // of the day.
+  if (b.time) out += `${formatTimeRange(b.time, " - ")} `;
+  out += b.title;
+  if (b.assoc) out += ` [${formatAssoc(b.assoc)}]`;
+  if (b.metadata !== undefined) out += ` (${b.metadata})`;
+  return out;
+}
+
+/** `[Project]` → `Project`; `[D:Domain]` → `D:Domain`. */
+function formatAssoc(assoc: Association): string {
+  return assoc.kind === "domain" ? `D:${assoc.id}` : assoc.id;
+}
+

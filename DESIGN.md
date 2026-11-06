@@ -8,7 +8,7 @@ It has three parts:
 
 - **Components** in `src/ui/components/` (and the shared pieces still in `src/ui/timeline/`), listed below.
 - **Tokens** on `body` in `styles.css`, for the sizes components and views still set themselves.
-- **`src/designSystem.test.ts`**, which counts the patterns that caused the drift and fails if any count goes up. Moving a view onto a component lowers a count; lower its baseline in the test to match.
+- **`src/shared/design-system.test.ts`**, which counts the patterns that caused the drift and fails if any count goes up. Moving a view onto a component lowers a count; lower its baseline in the test to match.
 
 ## Rules
 
@@ -17,9 +17,9 @@ It has three parts:
 3. **No new drift.** No hex colours, pixel font sizes or pixel radii in a component: use an Obsidian variable or a token. No pasted SVG icons: use an Obsidian icon by name. No hand-made frameless buttons: use `IconButton`.
 4. **Global CSS lives in `styles.css`.** That covers anything portaled to `<body>`, created from TypeScript, or shared between components. Every global class starts with `kairos-`.
 5. **Beat Obsidian's button and input styles with `body`.** Obsidian styles `button:not(.clickable-icon)` and `input[type='text']` at specificity (0,1,1), which beats a lone class. A global rule for a `<button>` or `<input>` is written `body .kairos-x`. A component's scoped rule (0,2,0) already wins.
-6. **Truncated text must be readable.** Anything that ellipsizes or clamps carries `use:peek` (`src/ui/actions/peek.ts`), so pointing at it (or pressing and holding on touch) shows the whole text.
+6. **Truncated text must be readable.** Anything that ellipsizes or clamps carries `use:peek` (`src/shared/actions/peek.action.ts`), so pointing at it (or pressing and holding on touch) shows the whole text.
 7. **Mind `aria-label`.** Obsidian shows any `aria-label` as a tooltip. On an element that also opens a popover, name it with `aria-labelledby` instead, or the tooltip covers the popover.
-8. **Every dialog adds `kairos-modal`.** A class that extends Obsidian's `Modal` calls `this.modalEl.addClass("kairos-modal")` first thing in `onOpen`. It lines the title up with the content under themes that indent modal titles, and gives Kairos's dialogs one hook. `src/designSystem.test.ts` checks it.
+8. **Every dialog adds `kairos-modal`.** A class that extends Obsidian's `Modal` calls `this.modalEl.addClass("kairos-modal")` first thing in `onOpen`. It lines the title up with the content under themes that indent modal titles, and gives Kairos's dialogs one hook. `src/shared/design-system.test.ts` checks it.
 
 ## Tokens
 
@@ -56,7 +56,7 @@ For colour, always use Obsidian's variables: `--text-normal`, `--text-muted`, `-
 | `ItemText` | An item's text: one line or `lines` lines with an ellipsis, peek when truncated, edit in place with `onCommit` (Enter or leaving commits, Escape cancels; `editing` can be bound), hold to drag with `onGrab`. | The text in every `ItemRow` |
 | `AssocMeta` | An item's project or domain on its meta line, Ctrl/Cmd-click to open. | `ItemRow`'s `meta` |
 | `RowLabel` | A project's or domain's name, note and intensity in the Grid and Timeline row-label column, with its hover card. | Grid and Timeline rows |
-| `HoverCard` | Kairos's own hover card, on `Popover`: a bar in the entity's colour, then the name in serif (`kairos-hover-card-name`) and whatever goes under it: `-note`, `-desc`, a `-facts` list, `-bars`, `-dim` (classes in `styles.css`). It never takes the pointer. Its owner decides when it opens; `hoverHold` (`src/ui/actions/hoverHold.ts`) opens it on a resting pointer or a touch hold. | Row labels, the Grid's intention and intensity marks |
+| `HoverCard` | Kairos's own hover card, on `Popover`: a bar in the entity's colour, then the name in serif (`kairos-hover-card-name`) and whatever goes under it: `-note`, `-desc`, a `-facts` list, `-bars`, `-dim` (classes in `styles.css`). It never takes the pointer. Its owner decides when it opens; `hoverHold` (`src/shared/actions/hover-hold.action.ts`) opens it on a resting pointer or a touch hold. | Row labels, the Grid's intention and intensity marks |
 | `SpanBar` | A stretch of active time as the Timeline draws it: caps in the entity's colour, the inside tinted by intensity (dashed at 0), an arrow while it runs on, the intention inside, and intensity bars that pick a level. Fills its parent. | The status strip in the Projects view |
 | `IntensityBars` | A project's intensity as three stacked bars. | Grid labels, Timeline bars |
 | `StepArrows` | The arrows around a header's date, « ‹ date › »: the outer pair takes the view's big step, the inner pair one smaller unit. Pass `big` and `small` as "a week", "7 days", and it writes the tooltips ("Back a week"). Without `big` it draws only ‹ ›. | Every view's date navigator (the Day view has only ‹ ›) |
@@ -75,6 +75,6 @@ A block's header in a list (the Grid cell's and the Routines view's `HH:MM Title
 These still exist as several copies and are the next components to make, in this order:
 
 1. **Row buttons**: the corner action bars of tasks, nudges and backlog entries, and the leftover and nudge arrows, onto `IconButton`.
-2. **Routine suggestions**: the rows in the Routines alert panel (`RoutinesAlert.svelte`) onto `ItemRow`.
+2. **Routine suggestions**: the rows in the Routines alert panel (`routines-alert.component.svelte`) onto `ItemRow`.
 3. **Date card and hour gutter everywhere**: the Grid's date headers are still their own copy of `DateCard` (with a Day-view dot and a spring highlight to add as props), and the Day view still draws its own hour gutter and lines.
 4. **Timeline bars onto `SpanBar`**: the Timeline view (`GanttView`) still draws its bars with its own copy of the same look.
